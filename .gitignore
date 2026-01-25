@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+
+# OS/System files
+.DS_Store
+
+# Secrets
+.env
+*.key
+
+# Database
+db.sqlite3
+
+staticfiles/
+media/
+
+# Logs
+*.log
+
+# Runtime
+*.pid
+*.sock
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+*.pem
+*.key
