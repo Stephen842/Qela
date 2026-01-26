@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!&(_438f@j6k*i$#pu=a8r9t*^bn__$eah^%uar1t$g6vbmfg_'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = []
+# Redirect all HTTP requests to HTTPS
+SECURE_SSL_REDIRECT = not DEBUG
+
+# Prevent content sniffing and enforce XSS protection
+SECURE_BROWSER_XSS_FILTER = True # Enable browser XSS filter
+X_FRAME_OPTIONS = 'DENY' # Prevent clickjacking
+SECURE_CONTENT_TYPE_NOSNIFF = True # Prevent MIME-type sniffing
+
+# Ensure cookies are only sent over HTTPS
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+]
+
+# Recommended additions for better security
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # Force HTTPS for one year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -37,6 +63,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Apps
+    'accounts.apps.AccountsConfig',
+    'feed',
 ]
 
 MIDDLEWARE = [
@@ -50,6 +80,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'Qela.urls'
+
+AUTH_USER_MODEL = 'accounts.User'
 
 TEMPLATES = [
     {
@@ -74,9 +106,13 @@ WSGI_APPLICATION = 'Qela.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('POSTGRES_DB'),
+        'USER': config('POSTGRES_USER'),
+        'PASSWORD': config('POSTGRES_PASSWORD'),
+        'HOST': config('POSTGRES_HOST'),
+        'PORT': config('POSTGRES_PORT'),
+    },
 }
 
 
