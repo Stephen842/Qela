@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+from datetime import timedelta
 from django_countries.fields import CountryField
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -14,15 +15,16 @@ class UsersManager(BaseUserManager):
             raise ValueError('Email address is required')
         email=self.normalize_email(email).lower()
 
-        extra_fields.setdefault('is_active', True)
+        # Regular users start inactive and unverified
+        extra_fields.setdefault("is_active", False)
 
-        user = self.model(
-            email=email,
-            **extra_fields
-        )
-        if not password:
-            raise ValueError('Password is required')
-        user.set_password(password)  # Hash the password
+        user = self.model(email=email, **extra_fields)
+
+        if password:
+            user.set_password(password) # Hash the password
+        else:
+            # Required for OAuth users
+            user.set_unusable_password()
 
         user.save(using=self._db)
         return user
@@ -52,6 +54,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    # Temporary email storage for pending email updates
+    _new_email = models.EmailField(null=True, blank=True)
+    email_verification_pending = models.BooleanField(default=False)
+
+    account_updated_at = models.DateTimeField(null=True, blank=True)
+
+    is_deactivated = models.BooleanField(default=False)
+    deactivated_at = models.DateTimeField(null=True, blank=True)
+
     objects = UsersManager()
 
     USERNAME_FIELD = 'email'
@@ -74,9 +85,20 @@ class User(AbstractBaseUser, PermissionsMixin):
         '''Return the short name (username in this case)'''
         return self.username
     
+    # Utility method to check if account can be deleted
+    def can_delete_account(self):
+        if self.is_deactivated and self.deactivated_at:
+            return timezone.now() >= self.deactivated_at + timedelta(days=30)
+        return False
+    
     class Meta:
         verbose_name = 'User'
-        verbose_name_plural = "Users"
+        verbose_name_plural = 'Users'
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['username']),
+            models.Index(fields=['is_platform_admin']),
+        ]
 
 
 class UserProfile(models.Model):
