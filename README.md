@@ -3,6 +3,11 @@
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![Django](https://img.shields.io/badge/Django-5.2-green)
 ![GraphQL](https://img.shields.io/badge/GraphQL-Graphene-purple)
+![JWT](https://img.shields.io/badge/Auth-JWT-orange)
+![PostgreSQL](https://img.shields.io/badge/DB-PostgreSQL-blue)
+![Redis](https://img.shields.io/badge/Cache-Redis-red)
+![Celery](https://img.shields.io/badge/Task-Celery-green)
+![RabbitMQ](https://img.shields.io/badge/Broker-RabbitMQ-purple)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
@@ -137,26 +142,27 @@ GraphQL is exposed via:
 
 ## System Architecture
 
-Client (Frontend)
-      ▼
-REST API (/api/)
-  - Auth (JWT)
-  - Login
-  - Register
-  - Tokens
-      ▼
-GraphQL API (/graphql/)
-      ▼
-Django Application
-            ├── ORM (Models, Queries, Mutations)
-            ├── Celery Workers (Background Tasks)
-            │        ▼
-            │    RabbitMQ (Message Broker)
-            │
-            └── Redis (Caching Layer)
-            │        ▼
-            └── PostgreSQL Database
+### Layered Flow
 
+- **Client (Frontend)**  
+  ↓  
+
+- **REST API (`/api/`) — Authentication Layer**  
+  - JWT Authentication  
+  - Login endpoint  
+  - Registration endpoint  
+  - Token management  
+  ↓  
+
+- **GraphQL API (`/graphql/`) — Social Layer**  
+  ↓  
+
+- **Django Application**  
+  - ORM (Models, Queries, Mutations)  
+  - Celery Workers (Background Tasks)  
+    - RabbitMQ (Message Broker)  
+  - Redis (Caching Layer)  
+  - PostgreSQL (Primary Database)
 
 ### Responsibilities
 
