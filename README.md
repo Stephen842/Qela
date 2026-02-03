@@ -1,14 +1,19 @@
 # Qela – Social Media Feed Backend
 
-[![Python](https://img.shields.io/badge/Python-3.11-blue)](https://www.python.org/)
-[![Django](https://img.shields.io/badge/Django-5.2-green)](https://www.djangoproject.com/)
-[![GraphQL](https://img.shields.io/badge/GraphQL-Graphene-purple)](https://docs.graphene-python.org/projects/django/en/latest/)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Django](https://img.shields.io/badge/Django-5.2-green)
+![GraphQL](https://img.shields.io/badge/GraphQL-Graphene-purple)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 ---
 
 ## Project Overview
-**Qela** is a scalable backend system for a social media feed platform. It demonstrates best practices in backend engineering, deep GraphQL implementation, and clean maintainable code. The project provides a robust foundation for social media interactions including posts, comments, likes, and user authentication. Key goals include building a production-ready backend, implementing JWT-based authentication, creating an optimized database schema, and delivering a clean GraphQL API with Playground support.
+
+**Qela** is a scalable backend system for a social media feed platform. It demonstrates best practices in backend engineering, deep GraphQL implementation, and clean maintainable code.
+
+The project provides a robust foundation for social media interactions including posts, comments, likes, and user authentication. Key goals include building a production-ready backend, implementing JWT-based authentication, creating an optimized database schema, and delivering a clean GraphQL API with Playground support.
+
+---
 
 ## Why the Name “Qela”?
 
@@ -16,86 +21,173 @@ The name **Qela** is coined from the **isiXhosa language**, where the word *“i
 
 This meaning closely aligns with the core purpose of the project.
 
-**Qela** is a scalable backend system for a social media feed platform, built around the idea of connection—users connecting with content, users connecting with other users, and interactions forming a living network of activity. Posts, comments, and likes are not isolated features; they are interconnected entities that gain value through their relationships.
+**Qela** is a scalable backend system for a social media feed platform, built around the idea of connection — users connecting with content, users connecting with other users, and interactions forming a living network of activity. Posts, comments, and likes are not isolated features; they are interconnected entities that gain value through their relationships.
 
 From a technical perspective, the name **Qela** represents:
-- **Connection**, through clearly defined relationships between users, posts, comments, and likes within a well-structured relational database.
-- **Flow**, through efficient data movement enabled by GraphQL queries and mutations, pagination, and optimized resolvers.
-- **Structure**, through a solid schema design, enforced constraints, and clean separation of concerns across the backend architecture.
 
-The significance of the name also reflects the project’s philosophy: building systems where components are intentionally designed to work together rather than exist in isolation. Just as the word *Qela* implies cohesion and linkage, the backend is engineered to support scalable growth, maintainability, and real-world usage.
+- **Connection** — clearly defined relationships between users, posts, comments, and likes.  
+- **Flow** — efficient data movement through GraphQL queries, mutations, and pagination.  
+- **Structure** — strong schema design and separation of concerns in the backend.  
 
-In essence, **Qela is not just a name**—it represents a backend engineered around meaningful connections, efficient data flow, and a strong architectural foundation, mirroring how modern social platforms are built in production environments.
+In essence, **Qela is not just a name** — it represents a backend engineered around meaningful connections, efficient data flow, and a strong architectural foundation.
 
 ---
 
 ## Features
-- **User Authentication:** User registration, login, and secure JWT-based authentication.
-- **Posts:** Create, retrieve, and manage posts.
-- **Comments:** Add comments to posts and fetch comment threads.
-- **Likes:** Like and unlike posts (enforced as one like per user per post).
-- **GraphQL API:** Single `/graphql/` endpoint with GraphQL Playground enabled.
-- **Pagination & Filtering:** Efficient pagination and advanced filtering for feed queries.
-- **Analytics:** Basic analytics such as likes count per post.
-- **Asynchronous Background Processing:** Background task handling using Celery for non-blocking operations.
-- **Caching:** Redis-based caching for frequently accessed data and performance optimization.
-- **Search & Filtering:** Search posts by content and filter feeds by author, date, and engagement metrics.
-- **Business Rules Enforcement:** Authentication required for mutations, non-empty post content, comments tied to valid posts, and unique likes per user per post.
+
+### Core Capabilities
+
+- **User Authentication:** User registration, login, and secure JWT-based authentication.  
+- **Posts:** Create, retrieve, and manage posts.  
+- **Comments:** Add comments to posts and fetch comment threads.  
+- **Likes:** Like and unlike posts (one like per user per post).  
+- **GraphQL API:** Single `/graphql/` endpoint with GraphQL Playground enabled.  
+- **Pagination & Filtering:** Efficient pagination for feeds.  
+- **Analytics:** Basic analytics such as likes count per post.  
+- **Asynchronous Processing:** Background tasks with Celery.  
+- **Caching:** Redis-based caching for performance.  
+- **Search & Filtering:** Search posts by content and filter feeds.  
+- **Business Rules Enforcement:** Secure mutations and valid relationships between data.  
+
+---
+
+## Flow of Data
+
+1. Client authenticates via **REST API** and receives a JWT.  
+2. The JWT is sent in the `Authorization` header when calling GraphQL.  
+3. GraphQL serves social data based on the authenticated user.  
+
+---
+
+## Feature Breakdown
+
+### Authentication (REST API)
+
+- User registration  
+- Secure JWT-based login  
+- Access & refresh token handling  
+- Token-based session management  
+
+### Social Features (GraphQL)
+
+- **Posts:** Create, retrieve, update, delete  
+- **Comments:** Threaded comments linked to posts  
+- **Likes:** One like per user per post  
+- **Feed System:** Paginated and optimized social feed  
+- **Search & Filtering:** Search posts by content, author, or date  
+- **Analytics:** Engagement metrics like total likes per post  
+
+### Backend Capabilities
+
+- Asynchronous tasks using **Celery**  
+- Redis-based caching  
+- Optimized database queries using `select_related` and `prefetch_related`  
+- Dockerized local development  
 
 ---
 
 ## Tech Stack
-- **Backend Framework:** Django 5.2
-- **GraphQL:** Graphene-Django
-- **Authentication:** JWT-based authentication using `django-graphql-jwt`
-- **Database:** PostgreSQL
-- **Asynchronous Tasks:** Celery
-- **Message Broker:** RabbitMQ
-- **Caching Layer:** Redis
-- **Containerization:** Docker & Docker Compose
-- **Testing:** GraphQL Playground and Django testing framework
-- **Deployment Platform:** PythonAnywhere
+
+- **Backend Framework:** Django 5.2  
+- **REST API:** Django REST Framework (DRF)  
+- **GraphQL:** Graphene-Django  
+- **Authentication:** JWT using DRF  
+- **Database:** PostgreSQL  
+- **Asynchronous Tasks:** Celery  
+- **Message Broker:** RabbitMQ  
+- **Caching Layer:** Redis  
+- **Containerization:** Docker & Docker Compose  
+- **Testing:** GraphQL Playground + Django tests  
+- **Deployment:** PythonAnywhere  
 
 ---
 
-## Architecture
+## Core Architecture: REST + GraphQL (Hybrid Model)
+
+### REST API — Authentication & Accounts Layer
+
+The REST API serves as the **identity and access control system**. It handles:
+
+- User registration  
+- User login  
+- JWT token issuance  
+- Token validation and refresh  
+- User profile management  
+- Secure authentication middleware  
+
+> **Important:** Authentication logic lives in REST, not GraphQL.
+
+---
+
+### GraphQL API — Social Media Layer
+
+GraphQL handles all social interactions, including:
+
+- Creating and retrieving posts  
+- Adding comments to posts  
+- Liking and unliking posts  
+- Fetching paginated feeds  
+- Filtering and searching content  
+- Computing engagement analytics  
+
+GraphQL is exposed via:
+- http://localhost:8000/graphql/
+
+---
+
+## System Architecture
 
 Client (Frontend)
-        ▼
+      ▼
+REST API (/api/)
+  - Auth (JWT)
+  - Login
+  - Register
+  - Tokens
+      ▼
 GraphQL API (/graphql/)
-        ▼
+      ▼
 Django Application
-        ├── ORM (Models, Queries, Mutations)
-        ├── Celery Workers (Background Tasks)
-        │        ▼
-        │    RabbitMQ (Message Broker)
-        │
-        └── Redis (Caching Layer)
-        │        ▼
-        └── PostgreSQL Database
+            ├── ORM (Models, Queries, Mutations)
+            ├── Celery Workers (Background Tasks)
+            │        ▼
+            │    RabbitMQ (Message Broker)
+            │
+            └── Redis (Caching Layer)
+            │        ▼
+            └── PostgreSQL Database
 
 
-- Queries handle read-only operations (posts, comments, likes count).
-- Mutations handle write operations (create posts, add comments, like/unlike posts).
-- Celery processes background jobs such as notifications, analytics updates, and heavy computations.
-- RabbitMQ acts as the message broker for reliable task queuing.
-- Redis is used for caching frequently accessed data and improving read performance.
-- Docker ensures consistent environments across development, testing, and production.
-- Resolvers are optimized using `select_related` and `prefetch_related` to prevent N+1 queries.
+### Responsibilities
+
+- Queries handle reads (posts, comments, likes).  
+- Mutations handle writes (create posts, add comments, like posts).  
+- Celery handles background jobs.  
+- RabbitMQ queues tasks reliably.  
+- Redis improves performance through caching.  
+- PostgreSQL stores all persistent data.  
 
 ---
 
 ## Database Schema
-**Entities:**  
-- **User:** id, username, email, password, created_at  
-- **Post:** id, author_id (FK → User), content, created_at, updated_at  
-- **Comment:** id, post_id (FK → Post), author_id (FK → User), content, created_at  
-- **Like:** id, user_id (FK → User), post_id (FK → Post), created_at  
-  - Unique constraint: `(user_id, post_id)`  
+### Core Entities
 
-**Best Practices:**  
-- Index foreign keys, use timestamps, enforce uniqueness at DB level.  
-- Batch queries and avoid heavy nested resolvers for performance.
+| Model | Fields |
+|------|--------|
+| **User** | id, username, email, password, created_at |
+| **Post** | id, author_id (FK → User), content, created_at, updated_at |
+| **Comment** | id, post_id (FK → Post), author_id (FK → User), content, created_at |
+| **Like** | id, user_id (FK → User), post_id (FK → Post), created_at |
+
+**Constraint:**  
+- Unique constraint on `(user_id, post_id)` for likes  
+
+**Best Practices Applied:**
+
+- Indexed foreign keys  
+- Automatic timestamps  
+- Database-level uniqueness enforcement  
+- Optimized query strategies  
 
 ---
 
@@ -109,35 +201,41 @@ Django Application
 
 Planned enhancements for future iterations include:
 
-- **Advanced Search Capabilities**
-  - Full-text search on posts and comments
-  - Ranking results by relevance and engagement
-- **Feed Optimization**
-  - Personalized feeds based on user activity and interests
-  - Efficient cursor-based pagination for large datasets
-- **Notifications System**
-  - Background-driven notifications using Celery
-  - Support for email or in-app notifications
-- **Rate Limiting & Security**
-  - Protect GraphQL endpoints against abuse
-  - Improved permission layers and fine-grained access control
-- **Observability**
-  - Logging, metrics, and monitoring for production readiness
-  - Error tracking and performance insights
-- **Horizontal Scalability**
-  - Improved caching strategies
-  - Read replicas and queue-based workload distribution
+- **Advanced Search**  
+  - Full-text search  
+  - Ranking by relevance  
+
+- **Personalized Feeds**  
+  - Activity-based recommendations  
+  - Cursor pagination  
+
+- **Notifications**  
+  - Celery-powered alerts  
+  - Email or in-app notifications  
+
+- **Security**  
+  - Rate limiting  
+  - Fine-grained permissions  
+
+- **Observability**  
+  - Logging and monitoring  
+  - Error tracking  
+
+- **Scalability**  
+  - Read replicas  
+  - Improved caching strategies  
 
 ---
 
 ## Design Philosophy
 
-Qela is built with a **backend-first, production-oriented mindset**:
+Qela follows a:
 
-- **Explicit business rules** over implicit behavior
-- **Schema-driven development** using GraphQL
-- **Clear separation of concerns** across models, resolvers, services, and background workers
-- **Scalability by design**, not as an afterthought
+- Backend-first mindset  
+- Schema-driven development  
+- Clear separation of concerns  
+- Scalability by design  
+
 
 The project intentionally mirrors how modern social platforms structure their backend systems, making it suitable for learning, experimentation, and real deployment scenarios.
 
@@ -150,7 +248,7 @@ The project intentionally mirrors how modern social platforms structure their ba
 Ensure the following tools and services are installed on your system:
 
 - **Python:** 3.11 or higher
-- **Django:** 4.0 or higher
+- **Django:** 5.0 or higher
 - **Graphene-django**
 - **Docker & Docker Compose**
 - **PostgreSQL**

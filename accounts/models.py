@@ -105,4 +105,4 @@ class UserProfile(models.Model):
         ]
 
     def __str__(self):
-        return f'Profile of {self.user.email}'
+        return f'{self.user.username} Profile'
