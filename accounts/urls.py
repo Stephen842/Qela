@@ -1,5 +1,5 @@
 from django.urls import path, include
-from accounts.views import RegisterView, LoginView, LogoutView, VerifyEmailView, ResendEmailVerificationView, PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView, UserAccountView, UserProfileView, GoogleLoginView, DeactivateAccountView 
+from accounts.views import RegisterView, LoginView, LogoutView, VerifyEmailView, ResendEmailVerificationView, PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView, UserAccountView, UserProfileView, GoogleLoginView, DeactivateAccountView, AdminDashboardView, AdminUserListView, AdminProfileListView, AdminSessionListView, AdminIPActivityView, AdminBlacklistView
 from . import views
 
 urlpatterns = [
@@ -39,6 +39,16 @@ urlpatterns = [
     path('settings/', UserAccountView.as_view(), name='account-settings'),
     path('profile/', UserProfileView.as_view(), name='profile-settings'),
     path('deactivate/', DeactivateAccountView.as_view(), name='account-deactivate'),
+
+    # -------------------------
+    # Super admin dashboard & analytics
+    # -------------------------
+    path('super-admin-dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
+    path('users/', AdminUserListView.as_view(), name='admin-users'),
+    path('profiles/', AdminProfileListView.as_view(), name='admin-profiles'),
+    path('sessions/', AdminSessionListView.as_view(), name='admin-sessions'),
+    path('ip-activity/', AdminIPActivityView.as_view(), name='admin-ip-activity'),
+    path('blacklist/', AdminBlacklistView.as_view(), name='admin-blacklist'),
 
 
     # -------------------------

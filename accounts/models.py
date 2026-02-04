@@ -17,6 +17,7 @@ class UsersManager(BaseUserManager):
 
         # Regular users start inactive and unverified
         extra_fields.setdefault("is_active", False)
+        extra_fields.setdefault("is_verified", False)
         extra_fields.setdefault("is_platform_admin", False)
 
         user = self.model(email=email, **extra_fields)
@@ -34,6 +35,7 @@ class UsersManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_verified", True)
         extra_fields.setdefault("is_platform_admin", True)
         
 
@@ -54,6 +56,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now, db_index=True)
     
     is_active = models.BooleanField(default=True)
+    is_verified = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
     # Global platform-level admin (organization-owned)
@@ -67,6 +70,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     is_deactivated = models.BooleanField(default=False)
     deactivated_at = models.DateTimeField(null=True, blank=True)
+
+    # Track last activity for automatic deletion
+    last_activity = models.DateTimeField(default=timezone.now)
 
     objects = UsersManager()
 

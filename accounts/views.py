@@ -160,7 +160,7 @@ class DeactivateAccountView(generics.GenericAPIView):
 
 
 class AdminDashboardView(APIView):
-    #Spermission_classes = [IsAuthenticated, IsPlatformAdmin]
+    #permission_classes = [IsAuthenticated, IsPlatformAdmin]
 
     def get(self, request):
         last_7_days = now() - timedelta(days=7)
@@ -169,7 +169,6 @@ class AdminDashboardView(APIView):
             # User metrics
             'total_users': User.objects.count(),
             'active_users': User.objects.filter(is_active=True).count(),
-            'verified_users': User.objects.filter(is_verified=True).count(),
             'platform_admins': User.objects.filter(is_platform_admin=True).count(),
             'deactivated_users': User.objects.filter(is_deactivated=True).count(),
             'new_users_last_7_days': User.objects.filter(date_joined__gte=last_7_days).count(),
@@ -189,6 +188,8 @@ class AdminDashboardView(APIView):
             
             'top_active_users': IPActivity.objects.values('user__email')
                 .annotate(total_requests=Count('id')).order_by('-total_requests')[:10],
+
+            'title': 'QELA | Admin Dashboard',
         }
 
         return render(request, 'admin-analytics/dashboard.html', context)

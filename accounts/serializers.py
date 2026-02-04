@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.utils import timezone
+from django_countries import countries
 
 from accounts.models import User, UserProfile
 from accounts.tokens import account_activation_token, password_reset_token
@@ -17,9 +18,18 @@ from accounts.utils import check_resend_limit, blacklist_all_user_tokens, can_up
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    country = serializers.CharField()  # Accept name from input
+
+    def validate_country(self, value):
+        # Convert full name to country code
+        for code, name in countries:
+            if name.lower() == value.lower():
+                return code
+        raise serializers.ValidationError('Invalid country name.')
+    
     class Meta:
         model = UserProfile
-        fields = ['bio', 'avatar', 'country', 'phone_number', 'gender', 'skills', 'location']
+        fields = ['bio', 'avatar', 'country', 'phone_number', 'gender', 'created_at']
 
 
 class UserAccountSerializer(serializers.ModelSerializer):

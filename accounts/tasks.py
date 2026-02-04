@@ -21,7 +21,7 @@ def send_account_activation_email(self, user_id):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = account_activation_token.make_token(user)
 
-    activation_link = f'{settings.FRONTEND_URL}/verify-email/{uid}/{token}'
+    activation_link = f'{settings.FRONTEND_URL}/auth/verify-email/{uid}/{token}'
 
     context = {
         'user': user,
@@ -51,7 +51,7 @@ def send_password_reset_email(self, user_id):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = password_reset_token.make_token(user)
 
-    reset_link = f'{settings.FRONTEND_URL}/reset-password/{uid}/{token}'
+    reset_link = f'{settings.FRONTEND_URL}/auth/password-reset-confirm/{uid}/{token}'
 
     context = {
         'user': user,
@@ -81,7 +81,7 @@ def send_email_change_verification(self, user_id, new_email):
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = email_verification_token.make_token(user)
 
-    verification_link = f'{settings.FRONTEND_URL}/verify-email/{uid}/{token}'
+    verification_link = f'{settings.FRONTEND_URL}/auth/verify-email/{uid}/{token}'
 
     context = {
         'user': user,

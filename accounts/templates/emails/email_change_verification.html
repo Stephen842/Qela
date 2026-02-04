@@ -150,7 +150,7 @@
 
                 <!-- CONTENT -->
                 <div class="content">
-                    <p>Hi {{ user.name|default:user.username }},</p>
+                    <p>Hi {{ user.name|default:"there" }},</p>
 
                     <p>
                         You requested to change the email address associated with your  

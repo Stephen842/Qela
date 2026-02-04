@@ -1,4 +1,4 @@
-Hi {{ user.name|default.username }},
+Hi {{ user.name|default:"there" }},
 
 You requested to change the email address associated with your QELA account.
 

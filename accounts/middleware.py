@@ -37,7 +37,7 @@ class DeviceTrackingMiddleware:
                 user_agent=raw_user_agent,
                 defaults={
                     'device_type': device_type,
-                    'operating_system': os_name,
+                    'os': os_name,
                     'browser': browser,
                     'is_active': True,
                 }

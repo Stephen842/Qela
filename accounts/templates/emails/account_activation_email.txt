@@ -1,4 +1,4 @@
-Hi {{ user.name|default.username }},
+Hi {{ user.name|default:"there" }},
 
 Welcome to QELA — a social networking platform designed to help you connect with people, share ideas, and build meaningful professional and personal relationships within a growing community.
 
