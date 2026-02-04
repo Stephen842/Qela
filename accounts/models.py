@@ -133,3 +133,70 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f'{self.user.username} Profile'
+    
+
+class UserSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sessions')
+    ip_address = models.GenericIPAddressField(db_index=True)
+    user_agent = models.TextField()
+
+    device_type = models.CharField(max_length=50, blank=True, null=True)
+    os = models.CharField(max_length=50, blank=True, null=True)
+    browser = models.CharField(max_length=50, blank=True, null=True)
+
+    last_active = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['ip_address']),
+            models.Index(fields=["last_active"]),
+        ]
+        ordering = ['-last_active']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.browser or 'Unknown Browser'}"
+
+
+class IPActivity(models.Model):
+    ip_address = models.GenericIPAddressField(db_index=True)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+
+    endpoint = models.CharField(max_length=255)
+    method = models.CharField(max_length=10)
+
+    request_count = models.PositiveIntegerField(default=1)
+    failed_attempts = models.PositiveIntegerField(default=0)
+
+    last_seen = models.DateTimeField(auto_now=True)
+    first_seen = models.DateTimeField(auto_now_add=True)
+
+    is_suspicious = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('ip_address', 'endpoint', 'method')
+        indexes = [
+            models.Index(fields=['ip_address']),
+            models.Index(fields=['is_suspicious']),
+            models.Index(fields=['last_seen']),
+        ]
+
+
+class BlacklistedIP(models.Model):
+    ip_address = models.GenericIPAddressField(unique=True)
+    reason = models.CharField(max_length=255, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['ip_address']),
+            models.Index(fields=['is_active']),
+        ]
+
+    def __str__(self):
+        status = 'active' if self.is_active else 'inactive'
+        return f'{self.ip_address} ({status})'

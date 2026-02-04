@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 from django.db import transaction
 
-from accounts.models import User
+from accounts.models import User, IPActivity, BlacklistedIP
 from accounts.tokens import account_activation_token, password_reset_token, email_verification_token
 
 
@@ -117,3 +117,38 @@ def delete_deactivated_accounts_after_grace_period(self):
     with transaction.atomic():
         for user in users_to_delete:
             user.delete()
+
+
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={"max_retries": 3})
+def auto_blacklist_suspicious_ips(self):
+    '''
+    Two-stage protection:
+    1) 75 requests in 2 minutes - mark suspicious (warning only)
+    2) 100 requests in 3 minutes - blacklist IP
+    '''
+    window_2_min = datetime.now() - timedelta(minutes=2)
+    window_3_min = datetime.now() - timedelta(minutes=3)
+
+    # ---- STAGE 1: FLAG SUSPICIOUS (WARNING ONLY) ----
+    suspicious_ips = IPActivity.objects.filter(
+        last_seen__gte=window_2_min,
+        request_count__gte=75,
+        is_suspicious=False
+    )
+
+    # ---- STAGE 2: ACTUAL BLACKLISTING ----
+    abusive_ips = IPActivity.objects.filter(
+        last_seen__gte=window_3_min,
+        request_count__gte=100,
+    )
+
+    with transaction.atomic():
+        for activity in suspicious_ips:
+            activity.is_suspicious = True
+            activity.save(update_fields=['is_suspicious'])
+
+        for activity in abusive_ips:
+            BlacklistedIP.objects.get_or_create(
+                ip_address=activity.ip_address,
+                defaults={'reason': 'Too many requests in short time'}
+            )

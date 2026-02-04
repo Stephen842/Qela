@@ -44,3 +44,12 @@ def can_update_account(user):
         return True
     
     return timezone.now() >= user.account_updated_at + timedelta(days=ACCOUNT_UPDATE_COOLDOWN_DAYS)
+
+
+class IsPlatformAdmin(BasePermission):
+    '''
+    Only allow access to platform-level super admin
+    '''
+
+    def has_permission(self, request, view):
+        return(request.user.is_authenticated and request.user.is_platform_admin)

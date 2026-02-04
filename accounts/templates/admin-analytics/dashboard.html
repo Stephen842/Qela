@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendTide Admin | Future of Work</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #F8FAFC; font-family: 'Inter', sans-serif; }
+        .card { @apply bg-white p-6 rounded-3xl shadow-sm border border-gray-100; }
+        .nav-pill { @apply px-4 py-2 rounded-full transition-all duration-200; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-2 rounded-lg text-white">
+                <i class="fas fa-bolt text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 tracking-tight">TrendTide</h1>
+        </div>
+
+        <nav class="bg-white px-2 py-2 rounded-full shadow-sm border border-gray-100 flex gap-2">
+            <a href="#" class="nav-pill bg-yellow-300 text-black font-semibold">Dashboard</a>
+            <a href="#" class="nav-pill text-gray-500 hover:bg-gray-50">Content</a>
+            <a href="#" class="nav-pill text-gray-500 hover:bg-gray-50">Finance</a>
+            <a href="#" class="nav-pill text-gray-500 hover:bg-gray-50">Reports</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <button class="text-gray-400 hover:text-gray-600"><i class="fas fa-search"></i></button>
+            <button class="text-gray-400 hover:text-gray-600 relative">
+                <i class="fas fa-bell"></i>
+                <span class="absolute -top-1 -right-1 bg-red-500 h-2 w-2 rounded-full"></span>
+            </button>
+            <img src="https://ui-avatars.com/api/?name={{ request.user.name }}&background=random" class="w-10 h-10 rounded-full border-2 border-white shadow-sm">
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        
+        <div class="md:col-span-3 flex flex-col gap-6">
+            <div class="card">
+                <div class="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                    <i class="fas fa-users"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-medium">Total Users</p>
+                <div class="flex items-end gap-2">
+                    <h2 class="text-3xl font-bold text-gray-800">{{ total_users|default:"128,420" }}</h2>
+                    <span class="text-green-500 text-xs font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+25%</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="bg-red-50 w-10 h-10 rounded-lg flex items-center justify-center text-red-600 mb-4">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <p class="text-gray-500 text-sm font-medium">Verified Users</p>
+                <div class="flex items-end gap-2">
+                    <h2 class="text-3xl font-bold text-gray-800">{{ verified_users|default:"66,816" }}</h2>
+                    <span class="text-green-500 text-xs font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+32%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-4 card">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="font-bold text-gray-800">User Growth</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl font-bold">2,420</span>
+                        <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-bold">↑ 28%</span>
+                    </div>
+                </div>
+                <button class="text-gray-300"><i class="fas fa-ellipsis-v"></i></button>
+            </div>
+            <canvas id="ctrChart" height="250"></canvas>
+        </div>
+
+        <div class="md:col-span-5 card relative">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-gray-800">New Signups (Last 7 Days)</h3>
+                <div class="bg-gray-100 p-1 rounded-full flex text-xs font-bold">
+                    <span class="px-3 py-1 text-gray-400">Today</span>
+                    <span class="px-3 py-1 bg-yellow-300 rounded-full text-black">This Week</span>
+                </div>
+            </div>
+            <canvas id="growthChart" height="200"></canvas>
+        </div>
+
+        <div class="md:col-span-8 card">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="font-bold text-gray-800">Audience Location</h3>
+                <button class="text-gray-500 text-sm border border-gray-200 px-4 py-1.5 rounded-full hover:bg-gray-50">
+                    Export Report <i class="fas fa-download ml-2 text-xs"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 rounded-2xl flex items-center justify-center p-4">
+                    <p class="text-gray-400 italic">Map Visualization (Geo-Data)</p>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">Top Countries</h4>
+                    <div class="space-y-4">
+                        {% for country in top_countries %}
+                        <div class="flex items-center gap-4">
+                            <span class="w-6 h-4 bg-gray-200 rounded-sm"></span>
+                            <span class="flex-1 text-sm font-semibold text-gray-700">{{ country.name }}</span>
+                            <div class="w-32 bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full" style="width: {{ country.percent }}%"></div>
+                            </div>
+                            <span class="text-sm font-bold text-gray-800">{{ country.percent }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="md:col-span-4 flex flex-col gap-6">
+            <div class="card bg-gray-900 text-white">
+                <h3 class="font-bold mb-4">Security Overview</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between border-b border-gray-800 pb-2">
+                        <span class="text-gray-400 text-sm">Suspicious IPs</span>
+                        <span class="text-red-400 font-bold">{{ suspicious_ips }}</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-800 pb-2">
+                        <span class="text-gray-400 text-sm">Active Sessions</span>
+                        <span class="text-green-400 font-bold">{{ active_sessions }}</span>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-center">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold">4.85</div>
+                        <div class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full mt-2">Status: Secure</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="font-bold text-gray-800 mb-4">Platform Admins</h3>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="text-3xl font-bold">{{ platform_admins }}</div>
+                    <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-bold">↑ 25%</span>
+                </div>
+                <div class="flex -space-x-3 overflow-hidden">
+                    <img class="inline-block h-10 w-10 rounded-full ring-4 ring-white" src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                    <img class="inline-block h-10 w-10 rounded-full ring-4 ring-white" src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                    <img class="inline-block h-10 w-10 rounded-full ring-4 ring-white" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80">
+                    <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 ring-4 ring-white">+5</div>
+                </div>
+                <button class="w-full mt-6 text-gray-400 font-bold text-sm flex justify-between items-center group">
+                    View All Staff <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // CTR/User Growth Bar Chart
+        const ctxCtr = document.getElementById('ctrChart').getContext('2d');
+        new Chart(ctxCtr, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
+                datasets: [{
+                    label: 'New Users',
+                    data: [12, 19, 13, 15, 22, 20],
+                    backgroundColor: '#F97316',
+                    borderRadius: 5,
+                    barThickness: 15,
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { display: false }, x: { grid: { display: false } } }
+            }
+        });
+
+        // Audience Growth Line Chart
+        const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+        const gradient = ctxGrowth.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+        new Chart(ctxGrowth, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Jun', 'Jul', 'Aug'],
+                datasets: [{
+                    data: [10, 40, 35, 45, 40, 50, 65],
+                    borderColor: '#3B82F6',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: gradient,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
+            }
+        });
+    </script>
+</body>
+</html>

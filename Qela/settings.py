@@ -95,6 +95,10 @@ AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+
+    # BLOCK bad IPs FIRST
+    'accounts.middleware.IPBlacklistMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -102,6 +106,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'csp.middleware.CSPMiddleware',
+
+    # LOG activity AFTER authentication
+    'accounts.middleware.IPActivityLoggingMiddleware',
+    'accounts.middleware.DeviceTrackingMiddleware',
 
     # Required by allauth
     'allauth.account.middleware.AccountMiddleware',
@@ -308,6 +316,12 @@ CELERY_TIMEZONE = 'Africa/Lagos'
 
 
 CELERY_BEAT_SCHEDULE = {
+    # --- SECURITY TASKS ---
+    'auto-blacklist-bad-ips': {
+        'task': 'accounts.tasks.auto_blacklist_suspicious_ips',
+        'schedule': 180,  # every 3 minutes
+    },
+
     # --- ACCOUNT CLEANUP TASKS ---
     'delete-old-deactivated-accounts': {
         'task': 'accounts.tasks.delete_deactivated_accounts_after_grace_period',
