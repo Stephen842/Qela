@@ -14,9 +14,23 @@
 
 ## Project Overview
 
-**Qela** is a scalable backend system for a social media feed platform. It demonstrates best practices in backend engineering, deep GraphQL implementation, and clean maintainable code.
+**Qela** is a scalable, hybrid backend system for a modern social media platform. It intentionally combines **RESTful APIs and GraphQL** to separate concerns, improve maintainability, and follow real-world production architecture patterns.
 
-The project provides a robust foundation for social media interactions including posts, comments, likes, and user authentication. Key goals include building a production-ready backend, implementing JWT-based authentication, creating an optimized database schema, and delivering a clean GraphQL API with Playground support.
+The system follows a **dual-API model**:
+
+- **REST API (JWT-based)** → Handles **authentication, accounts, and identity management**
+- **GraphQL API** → Powers the **entire social media experience** (posts, comments, likes, feeds, and analytics)
+
+This approach mirrors how many large-scale platforms operate in production:  
+authentication is handled via REST, while data-rich relational domains are managed with GraphQL.
+
+Key goals of the project include:
+
+- Building a production-ready backend architecture  
+- Implementing secure JWT-based authentication  
+- Designing an optimized relational database schema  
+- Delivering a clean, flexible GraphQL API with Playground support  
+- Demonstrating modern backend engineering practices  
 
 ---
 
@@ -42,7 +56,7 @@ In essence, **Qela is not just a name** — it represents a backend engineered a
 
 ### Core Capabilities
 
-- **User Authentication:** User registration, login, and secure JWT-based authentication.  
+- **User Authentication:** User registration, login, and secure JWT-based authentication using Django Restful Framework.  
 - **Posts:** Create, retrieve, and manage posts.  
 - **Comments:** Add comments to posts and fetch comment threads.  
 - **Likes:** Like and unlike posts (one like per user per post).  
