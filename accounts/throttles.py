@@ -28,5 +28,9 @@ class AccountUpdateThrottle(ScopedRateThrottle):
     scope = 'account_update'
 
 
+class GoogleLoginThrottle(ScopedRateThrottle):
+    scope = 'google_login'
+
+
 class AccountDeactivationThrottle(ScopedRateThrottle):
     scope = 'account_deactivate'

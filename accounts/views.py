@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 
-from accounts.serializers import UserProfileSerializer, UserAccountSerializer, RegisterSerializer, LoginSerializer, LogoutSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer, EmailVerificationSerializer, ResendEmailVerificationSerializer, DeactivateAccountSerializer
-from accounts.throttles import AccountUpdateThrottle, RegisterThrottle, LoginThrottle, PasswordResetThrottle, ChangePasswordThrottle, EmailVerificationThrottle, ResendEmailVerificationThrottle, AccountDeactivationThrottle
+from accounts.serializers import UserProfileSerializer, UserAccountSerializer, RegisterSerializer, LoginSerializer, LogoutSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer, EmailVerificationSerializer, ResendEmailVerificationSerializer, GoogleLoginSerializer, DeactivateAccountSerializer
+from accounts.throttles import AccountUpdateThrottle, RegisterThrottle, LoginThrottle, PasswordResetThrottle, ChangePasswordThrottle, EmailVerificationThrottle, ResendEmailVerificationThrottle, GoogleLoginThrottle, AccountDeactivationThrottle
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -131,6 +131,18 @@ class ResendEmailVerificationView(APIView):
         return Response({'detail': 'Verification email sent successfully.'}, status=status.HTTP_200_OK,)
 
 
+class GoogleLoginView(generics.GenericAPIView):
+    serializer_class = GoogleLoginSerializer
+    permission_classes = [AllowAny]
+    throttle_classes = [GoogleLoginThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        return Response(data, status=status.HTTP_200_OK)
+
+
 class DeactivateAccountView(generics.GenericAPIView):
     serializer_class = DeactivateAccountSerializer
     permission_classes = [IsAuthenticated]
@@ -147,4 +159,4 @@ def testing(request):
     context = {
         'title' : 'QELA - Testing function for templates file',
     }
-    return render(request, 'emails/email_change_verification.html', context)
+    return render(request, 'emails/password_reset_email.html', context)

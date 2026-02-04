@@ -1,5 +1,5 @@
 from django.urls import path, include
-from accounts.views import RegisterView, LoginView, LogoutView, VerifyEmailView, ResendEmailVerificationView, PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView, UserAccountView, UserProfileView, DeactivateAccountView 
+from accounts.views import RegisterView, LoginView, LogoutView, VerifyEmailView, ResendEmailVerificationView, PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView, UserAccountView, UserProfileView, GoogleLoginView, DeactivateAccountView 
 from . import views
 
 urlpatterns = [
@@ -26,6 +26,12 @@ urlpatterns = [
     # Password change (authenticated)
     # -------------------------
     path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
+
+    # -------------------------
+    # Google OAuth
+    # -------------------------
+    path('auth/google/login/', GoogleLoginView.as_view(), name='google-login'),
+    path('auth/', include('dj_rest_auth.urls')),
 
     # -------------------------
     # Account & Profile settings & Account deactivation

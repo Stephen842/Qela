@@ -1,0 +1,16 @@
+Hi {{ user.name|default.username }},
+
+Welcome to QELA — a social networking platform designed to help you connect with people, share ideas, and build meaningful professional and personal relationships within a growing community.
+
+To complete your registration, please verify your email address by clicking the link below:
+
+{{ activation_link }}
+
+If you didn’t create an account with QELA, you can safely ignore this email.
+
+— The QELA Team
+
+Need help?
+Reach out to us through our official support and community channels.
+
+© {% now "Y" %} QELA. All rights reserved.

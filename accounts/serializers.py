@@ -208,7 +208,6 @@ class ChangePasswordSerializer(serializers.Serializer):
         return user
 
 
-
 class EmailVerificationSerializer(serializers.Serializer):
     uidb64 = serializers.CharField()
     token = serializers.CharField()
@@ -269,6 +268,65 @@ class ResendEmailVerificationSerializer(serializers.Serializer):
     def save(self):
         send_account_activation_email.delay(self.user.id)
     
+
+class GoogleLoginSerializer(serializers.Serializer):
+    access_token = serializers.CharField(write_only=True)
+    refresh = serializers.CharField(read_only=True)
+    access = serializers.CharField(read_only=True)
+    user = serializers.DictField(read_only=True)
+
+    def validate(self, attrs):
+        request = self.context['request']
+        access_token = attrs.get('access_token')
+
+        if not access_token:
+            raise serializers.ValidationError('Access token is required.')
+        
+        try:
+            # Initialize allauth adapter
+            adapter = GoogleOAuth2Adapter()
+            app = adapter.get_provider().get_app(request)
+
+            # Parse and validate token
+            token = adapter.parse_token({'access_token': access_token})
+            token.app = app
+
+            # Complete social login
+            login = adapter.complete_login(
+                request,
+                app,
+                token,
+                response={'access_token': access_token}
+            )
+            login.token = token
+            login.save(request)
+        except Exception:
+            raise serializers.ValidationError('Invalid or expired Google token.')
+
+        user = login.account.user
+
+        # Auto-verify and activate Google users
+        if not user.is_verified:
+            user.is_verified = True
+            user.is_active = True
+            user.save(update_fields=['is_verified', 'is_active'])
+
+        # Issue JWT tokens
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': {
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'username': user.username,
+                'is_verified': user.is_verified,
+                'is_active': user.is_active,
+            },
+        }
+
 
 class DeactivateAccountSerializer(serializers.Serializer):
     confirm = serializers.BooleanField()

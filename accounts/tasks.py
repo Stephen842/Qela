@@ -28,7 +28,7 @@ def send_account_activation_email(self, user_id):
         'activation_link': activation_link,
     }
 
-    subject = 'Activate Your Future Of Work Account'
+    subject = 'Activate Your QELA Account'
 
     text_body = render_to_string('emails/account_activation_email.txt', context)
     html_body = render_to_string('emails/account_activation_email.html', context)
@@ -58,7 +58,7 @@ def send_password_reset_email(self, user_id):
         'reset_link': reset_link,
     }
 
-    subject = 'Reset Your Password'
+    subject = 'Reset Your QELA Password'
 
     text_body = render_to_string('emails/password_reset_email.txt', context)
     html_body = render_to_string('emails/password_reset_email.html', context)
@@ -89,7 +89,7 @@ def send_email_change_verification(self, user_id, new_email):
         'new_email': new_email,
     }
 
-    subject = 'Confirm Your New Email Address'
+    subject = 'Confirm Your QELA New Email Address'
 
     text_body = render_to_string('emails/email_change_verification.txt', context)
     html_body = render_to_string('emails/email_change_verification.html', context)

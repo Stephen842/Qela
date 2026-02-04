@@ -76,6 +76,17 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'csp',
+
+    # OAuth Authentication
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+
+    # API Auth
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'rest_framework.authtoken',
 ]
 
 SITE_ID = 1
@@ -91,6 +102,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'csp.middleware.CSPMiddleware',
+
+    # Required by allauth
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'Qela.urls'
@@ -101,7 +115,64 @@ AUTHENTICATION_BACKENDS = [
 
     # Default Django auth (permissions, admin)
     'django.contrib.auth.backends.ModelBackend',
+
+    # Allauth (social login)
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
+# Email-only authentication
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_UNIQUE_EMAIL = True
+
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
+
+# Signup form fields
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*',]
+
+# Prevent brute-force attacks
+ACCOUNT_RATE_LIMITS = {
+    'login_failed': '3/1m; 20/1h',
+}
+
+# Prevent CSRF-based logout
+ACCOUNT_LOGOUT_ON_GET = False
+
+# Session management
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 7 days
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
+ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+# Google OAuth
+GOOGLE_OAUTH_CLIENT_ID = config('GOOGLE_OAUTH_CLIENT_ID')
+GOOGLE_OAUTH_CLIENT_SECRET = config('GOOGLE_OAUTH_CLIENT_SECRET')
+GOOGLE_OAUTH_CALLBACK_URL = config('GOOGLE_OAUTH_CALLBACK_URL')
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APPS': [
+            {
+                'client_id': GOOGLE_OAUTH_CLIENT_ID,
+                'secret': GOOGLE_OAUTH_CLIENT_SECRET,
+                'key': '',
+            },
+        ],
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'OAUTH_PKCE_ENABLED': True,
+    }
+}
+
+# Automatically link social accounts with existing email
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 TEMPLATES = [
     {
@@ -201,6 +272,7 @@ REST_FRAMEWORK = {
         'password_reset': '5/hour',
         'change_password': '5/hour',
         'account_update': '1/hour',
+        'google_login': '3/min',
         'account_deactivate': '2/day',
     },
 }

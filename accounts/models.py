@@ -17,6 +17,7 @@ class UsersManager(BaseUserManager):
 
         # Regular users start inactive and unverified
         extra_fields.setdefault("is_active", False)
+        extra_fields.setdefault("is_platform_admin", False)
 
         user = self.model(email=email, **extra_fields)
 
@@ -33,6 +34,7 @@ class UsersManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_platform_admin", True)
         
 
         if extra_fields.get('is_staff') is not True:
@@ -53,6 +55,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+
+    # Global platform-level admin (organization-owned)
+    is_platform_admin = models.BooleanField(default=False)
 
     # Temporary email storage for pending email updates
     _new_email = models.EmailField(null=True, blank=True)
