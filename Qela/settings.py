@@ -381,3 +381,7 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 
 FRONTEND_URL = config('FRONTEND_URL')
+
+GRAPHENE = {
+    'SCHEMA': 'feed.schema.schema'
+}
