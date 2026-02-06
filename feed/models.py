@@ -110,3 +110,35 @@ class Share(models.Model):
     original_post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='shares')
     shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_post')
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class UserAnalytics(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='analytics')
+
+    total_likes_recieved = models.PositiveBigIntegerField(default=0)
+    total_comments_recieved = models.PositiveBigIntegerField(default=0)
+    total_shares_recieved = models.PositiveBigIntegerField(default=0)
+    total_posts = models.PositiveBigIntegerField(default=0)
+
+    most_liked_post = models.ForeignKey(Post, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+
+    most_active_follower = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Analytics for {self.user}'
+    
+
+class PostDailyMetrics(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='daily_metrics')
+    date = models.DateField()
+    likes = models.PositiveIntegerField(default=0)
+    comments = models.PositiveIntegerField(default=0)
+    shares = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('post', 'date')
+        indexes = [
+            models.Index(fields=['post', 'date'])
+        ]

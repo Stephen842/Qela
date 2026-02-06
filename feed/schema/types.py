@@ -13,7 +13,7 @@ class PostType(DjangoObjectType):
     shares_count = graphene.Int()
     liked_by_me = graphene.Boolean()
     bookmarked_by_me = graphene.Boolean()
-    shares_by_me = graphene.Boolean()
+    shared_by_me = graphene.Boolean()
 
     class Meta:
         model = Post
@@ -40,7 +40,7 @@ class PostType(DjangoObjectType):
             return False
         return Bookmark.objects.filter(user=user, post=self).exists()
     
-    def resolve_shares_by_me(self, info):
+    def resolve_shared_by_me(self, info):
         user = info.context.user
         if not user.is_authenticated:
             return False
