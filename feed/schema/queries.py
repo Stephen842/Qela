@@ -12,9 +12,9 @@ from .types import PostType, ShareType, UserAnalyticsType, PostDailyMetricsType
 class Query(graphene.ObjectType):
     all_posts = graphene.List(
         PostType,
-        first=graphene.Int(),
-        after=graphene.String(),
-        sort_by=graphene.String()
+        first=graphene.Int(default_value=10),
+        after=graphene.DateTime(),
+        sort_by=graphene.String(default_value='latest'),
     )
 
     post_by_id = graphene.Field(PostType, id=graphene.ID(required=True))
@@ -41,17 +41,13 @@ class Query(graphene.ObjectType):
 
     # --------- Resolver -----------
     def resolve_all_posts(self, info, first=10, after=None, sort_by='latest'):
-        qs = (
-            Post.objects
-            .annotate(
-                likes_count=Count('likes'),
-                comments_count=Count('comments'),
-                shares_count=Count('shares'),
-            )
-            .select_related('author')
-            .prefetch_related('comments', 'likes', 'shares')
-            .order_by('-created_at')
-        )
+        qs = Post.objects.annotate(
+            likes_count=Count('likes'),
+            comments_count=Count('comments'),
+            shares_count=Count('shares'),
+        ).select_related('author') \
+        .prefetch_related('comments', 'likes', 'shares') \
+        .order_by('-created_at')
 
         if sort_by == 'latest':
             qs = qs.order_by('-created_at')
@@ -79,24 +75,29 @@ class Query(graphene.ObjectType):
             .first()
         )
     
-    def resolve_my_feed(self, info, limit=10, offset=0):
+    def resolve_my_feed(self, info, first=10, after=None):
         user = info.context.user
         if not user.is_authenticated:
             raise GraphQLError('Authentication required')
         
         following_users = Follow.objects.filter(follower=user).values_list('following', flat=True)
 
-        return(
-            Post.objects
-            .filter(author__in=following_users)
-            .annotate(
-                likes_count=Count('likes'),
-                comments_count=Count('comments'),
-                shares_count=Count('shares'),
-            )
-            .select_related('author')
-            .prefetch_related('comments', 'likes', 'shares')[offset: offset + limit]
-        )
+        qs = Post.objects.annotate(
+            likes_count=Count('likes'),
+            comments_count=Count('comments'),
+            shares_count=Count('shares'),
+        ).select_related('author') \
+        .prefetch_related('comments', 'likes', 'shares') \
+        .order_by('-created_at')
+
+        if after:
+            qs = qs.filter(created_at__lt=after)
+
+
+        followed_posts = qs.filter(author__in=following_users)[:first]
+        other_posts = qs.exclude(author__in=following_users)[:5]
+
+        return list(followed_posts) + list(other_posts)
     
     def resolve_my_bookmarks(self, info):
         user = info.context.user

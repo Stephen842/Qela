@@ -52,7 +52,10 @@ class PostType(DjangoObjectType):
         return self.author.username
 
     def resolve_author_avatar(self, info):
-        return self.author.profile.avatar.url if hasattr(self.author, "profile") else None
+        profile = getattr(self.author, 'profile', None)
+        if profile and profile.avatar:
+            return profile.avatar.url
+        return None
 
 
 class CommentType(DjangoObjectType):
