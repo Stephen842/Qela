@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from allauth.socialaccount.signals import social_account_added
 
 from .models import User, UserProfile
+from feed.models import UserAnalytics
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
@@ -15,3 +16,8 @@ def create_profile_for_google_user(request, sociallogin, **kwargs):
     user = sociallogin.user
     # Only create profile if it doesn’t exist
     UserProfile.objects.get_or_create(user=user)
+
+@receiver(post_save, sender=User)
+def create_user_analytics(sender, instance, created, **kwargs):
+    if created:
+        UserAnalytics.objects.create(user=instance)

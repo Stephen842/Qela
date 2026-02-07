@@ -327,6 +327,12 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'accounts.tasks.delete_deactivated_accounts_after_grace_period',
         'schedule': 3600,  # every 1 hour
     },
+
+    # --- ANALYTICS TASKS ---
+    'update-most-liked-posts': {
+        'task': 'feed.tasks.update_most_liked_posts',
+        'schedule': 86400,  # every 24 hours
+    },
 }
 
 

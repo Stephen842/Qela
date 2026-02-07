@@ -1,7 +1,8 @@
 import graphene
 from graphql import GraphQLError
+from django.utils import timezone
 
-from feed.models import Post, Comment, Like, Bookmark, Follow, Share
+from feed.models import Post, Comment, Like, Bookmark, Follow, Share, UserAnalytics, PostDailyMetrics
 from .types import PostType, CommentType
 
 #-----------------------------
@@ -20,6 +21,11 @@ class CreatePost(graphene.Mutation):
             raise GraphQLError('Authentication required')
         
         post = Post.objects.create(author=user, content=content)
+
+        analytics, _ = UserAnalytics.objects.get_or_create(user=user)
+        analytics.total_posts += 1
+        analytics.save()
+
         return CreatePost(post=post)
     
 
@@ -57,10 +63,26 @@ class DeletePost(graphene.Mutation):
         if not user.is_authenticated:
             raise GraphQLError('Authentication required')
 
-        deleted, _ = Post.objects.filter(author=user, id=post_id).delete()
-
-        if deleted == 0:
+        try:
+            post = Post.objects.get(id=post_id, author=user)
+        except Post.DoesNotExist:
             raise GraphQLError('Post not found or not yours')
+        
+        # Capture counts before deletion
+        likes_count = post.likes.count()
+        comments_count = post.comments.count()
+        shares_count = post.shares.count()
+
+        # Delete the post
+        post.delete()
+
+        # Update user analytics
+        analytics = UserAnalytics.objects.get(user=user)
+        analytics.total_posts = max(0, analytics.total_posts - 1)
+        analytics.total_likes_recieved = max(0, analytics.total_likes_recieved - likes_count)
+        analytics.total_comments_recieved = max(0, analytics.total_comments_recieved - comments_count)
+        analytics.total_shares_recieved = max(0, analytics.total_shares_recieved - shares_count)
+        analytics.save()
         
         return DeletePost(ok=True)
     
@@ -83,6 +105,15 @@ class AddComment(graphene.Mutation):
             raise GraphQLError('Post not found')
 
         comment = Comment.objects.create(post=post, author=user, content=content)
+
+        analytics = UserAnalytics.objects.get(user=post.author)
+        analytics.total_comments_recieved += 1
+        analytics.save()
+
+        metric, _ = PostDailyMetrics.objects.get_or_create(post=post, date=timezone.now().date())
+        metric.comments += 1
+        metric.save()
+
         return AddComment(comment=comment)
     
 
@@ -120,10 +151,20 @@ class DeleteComment(graphene.Mutation):
         if not user.is_authenticated:
             raise GraphQLError('Authentication required')
 
-        deleted, _ = Comment.objects.filter(author=user, id=comment_id).delete()
-
-        if deleted == 0:
+        try:
+            comment = Comment.objects.get(id=comment_id, author=user)
+        except Comment.DoesNotExist:
             raise GraphQLError('Comment not found or not yours')
+        post = comment.post
+        comment.delete()
+
+        analytics = UserAnalytics.objects.get(user=post.author)
+        analytics.total_comments_recieved = max(0, analytics.total_comments_recieved - 1)
+        analytics.save()
+
+        metric, _ = PostDailyMetrics.objects.get_or_create(post=post, date=timezone.now().date())
+        metric.comments = max(0, metric.comments - 1)
+        metric.save()
         
         return DeleteComment(ok=True)
 
@@ -144,7 +185,18 @@ class LikePost(graphene.Mutation):
         except Post.DoesNotExist:
             raise GraphQLError('Post not found')
 
-        Like.objects.get_or_create(user=user, post=post)
+        like, created = Like.objects.get_or_create(user=user, post=post)
+
+        if created:
+            creator = post.author
+            analytics = UserAnalytics.objects.get(user=creator)
+            analytics.total_likes_recieved += 1
+            analytics.save()
+
+            metric, _ = PostDailyMetrics.objects.get_or_create(post=post, date=timezone.now().date())
+            metric.likes += 1
+            metric.save()
+
         return LikePost(ok=True)
     
 
@@ -159,7 +211,18 @@ class UnlikePost(graphene.Mutation):
         if not user.is_authenticated:
             raise GraphQLError('Authentication required')
 
-        Like.objects.filter(user=user, post_id=post_id).delete()
+        deleted, _ = Like.objects.filter(user=user, post_id=post_id).delete()
+
+        if deleted:
+            post = Post.objects.get(id=post_id)
+            analytics = UserAnalytics.objects.get(user=post.author)
+            analytics.total_likes_recieved -= 1
+            analytics.save()
+
+            metric, _ = PostDailyMetrics.objects.get_or_create(post=post, date=timezone.now().date())
+            metric.likes = max(0, metric.likes - 1)
+            metric.save()
+            
         return UnlikePost(ok=True)
     
 
@@ -247,7 +310,17 @@ class SharePost(graphene.Mutation):
         except Post.DoesNotExist:
             raise GraphQLError('Post not found')
 
-        Share.objects.get_or_create(original_post=post, shared_by=user)
+        share, created = Share.objects.get_or_create(original_post=post, shared_by=user)
+
+        if created:
+            analytics = UserAnalytics.objects.get(user=post.author)
+            analytics.total_shares_recieved += 1
+            analytics.save()
+
+            metric, _ = PostDailyMetrics.objects.get_or_create(post=post, date=timezone.now().date())
+            metric.shares += 1
+            metric.save()
+
         return SharePost(ok=True)
 
 class Mutation(graphene.ObjectType):

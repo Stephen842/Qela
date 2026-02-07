@@ -7,10 +7,11 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.utils import timezone
 from datetime import datetime, timedelta
-
 from django.db import transaction
+from django.db.models import Count, OuterRef, Subquery
 
 from accounts.models import User, IPActivity, BlacklistedIP
+from feed.models import Post, UserAnalytics
 from accounts.tokens import account_activation_token, password_reset_token, email_verification_token
 
 
@@ -105,7 +106,7 @@ def send_email_change_verification(self, user_id, new_email):
     email.send()
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={"max_retries": 3})
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={'max_retries': 3})
 def delete_deactivated_accounts_after_grace_period(self):
     '''
     Permanently deletes user accounts that were explicitly deactivated
@@ -119,7 +120,7 @@ def delete_deactivated_accounts_after_grace_period(self):
             user.delete()
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={"max_retries": 3})
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={'max_retries': 3})
 def auto_blacklist_suspicious_ips(self):
     '''
     Two-stage protection:
@@ -152,3 +153,25 @@ def auto_blacklist_suspicious_ips(self):
                 ip_address=activity.ip_address,
                 defaults={'reason': 'Too many requests in short time'}
             )
+
+
+@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=30, retry_kwargs={'max_retries': 3})
+def update_most_liked_posts():
+    # Get the most liked post per user
+    top_post_subquery = (
+        Post.objects
+        .filter(author=OuterRef('user_id'))
+        .annotate(likes_count=Count('likes'))
+        .order_by('-likes_count', '-created_at')
+        .values('id')[:1]
+    )
+
+    # Update UserAnalytics in bulk
+    analytics_to_update = []
+    for analytics in UserAnalytics.objects.all():
+        top_post_id = top_post_subquery.filter(author_id=analytics.user_id).first()
+        analytics.most_liked_post_id = top_post_id['id'] if top_post_id else None
+        analytics_to_update.append(analytics)
+
+    if analytics_to_update:
+        UserAnalytics.objects.bulk_update(analytics_to_update, ['most_liked_post'])

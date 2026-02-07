@@ -2,8 +2,8 @@ import graphene
 from graphql import GraphQLError
 from django.db.models import Count
 
-from feed.models import Post, Bookmark, Follow, Share
-from .types import PostType, ShareType
+from feed.models import Post, Bookmark, Follow, Share, UserAnalytics, PostDailyMetrics
+from .types import PostType, ShareType, UserAnalyticsType, PostDailyMetricsType
 
 #------------------------------
 # Queries (READ DATA)
@@ -28,6 +28,13 @@ class Query(graphene.ObjectType):
 
     post_shares = graphene.List(
         ShareType,
+        post_id=graphene.ID(required=True)
+    )
+
+    my_analytics = graphene.Field(UserAnalyticsType)
+
+    post_metrics = graphene.List(
+        PostDailyMetricsType,
         post_id=graphene.ID(required=True)
     )
 
@@ -101,3 +108,14 @@ class Query(graphene.ObjectType):
         return Share.objects.filter(
             original_post_id=post_id
         ).select_related('shared_by', 'original_post')
+    
+    def resolve_my_analytics(self, info):
+        user = info.context.user
+        if not user.is_authenticated:
+            raise GraphQLError("Authentication required")
+
+        analytics, _ = UserAnalytics.objects.get_or_create(user=user)
+        return analytics
+    
+    def resolve_post_metrics(self, info, post_id):
+        return PostDailyMetrics.objects.filter(post_id=post_id).order_by("-date")

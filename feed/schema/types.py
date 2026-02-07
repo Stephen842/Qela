@@ -1,6 +1,6 @@
 import graphene
 from graphene_django import DjangoObjectType
-from feed.models import Post, Comment, Like, Bookmark, Follow, Share
+from feed.models import Post, Comment, Like, Bookmark, Follow, Share, UserAnalytics, PostDailyMetrics
 
 #---------------------------
 # GRAPHQL TYPES
@@ -75,3 +75,23 @@ class ShareType(DjangoObjectType):
     class Meta:
         model = Share
         fields = ('id', 'original_post', 'shared_by', 'created_at')
+
+
+class UserAnalyticsType(DjangoObjectType):
+    class Meta:
+        model = UserAnalytics
+        fields = (
+            'total_likes_recieved',
+            'total_comments_recieved',
+            'total_shares_recieved',
+            'total_posts',
+            'most_liked_post',
+            'most_active_follower',
+            'updated_at',
+        )
+
+
+class PostDailyMetricsType(DjangoObjectType):
+    class Meta:
+        model = PostDailyMetrics
+        fields = ('date', 'likes', 'comments', 'shares')
