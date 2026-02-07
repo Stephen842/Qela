@@ -14,6 +14,8 @@ class PostType(DjangoObjectType):
     liked_by_me = graphene.Boolean()
     bookmarked_by_me = graphene.Boolean()
     shared_by_me = graphene.Boolean()
+    author_username = graphene.String()
+    author_avatar = graphene.String()
 
     class Meta:
         model = Post
@@ -45,6 +47,12 @@ class PostType(DjangoObjectType):
         if not user.is_authenticated:
             return False
         return Share.objects.filter(original_post=self, shared_by=user).exists()
+    
+    def resolve_author_username(self, info):
+        return self.author.username
+
+    def resolve_author_avatar(self, info):
+        return self.author.profile.avatar.url if hasattr(self.author, "profile") else None
 
 
 class CommentType(DjangoObjectType):

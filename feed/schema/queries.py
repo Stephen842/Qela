@@ -12,16 +12,17 @@ from .types import PostType, ShareType, UserAnalyticsType, PostDailyMetricsType
 class Query(graphene.ObjectType):
     all_posts = graphene.List(
         PostType,
-        limit=graphene.Int(default_value=10),
-        offset=graphene.Int(default_value=0),
+        first=graphene.Int(),
+        after=graphene.String(),
+        sort_by=graphene.String()
     )
 
     post_by_id = graphene.Field(PostType, id=graphene.ID(required=True))
 
     my_feed = graphene.List(
         PostType,
-        limit=graphene.Int(default_value=10),
-        offset=graphene.Int(default_value=0),
+        first=graphene.Int(),
+        after=graphene.String()
     )
 
     my_bookmarks = graphene.List(PostType)
@@ -39,8 +40,8 @@ class Query(graphene.ObjectType):
     )
 
     # --------- Resolver -----------
-    def resolve_all_posts(self, info, limit=10, offset=0):
-        return(
+    def resolve_all_posts(self, info, first=10, after=None, sort_by='latest'):
+        qs = (
             Post.objects
             .annotate(
                 likes_count=Count('likes'),
@@ -49,8 +50,20 @@ class Query(graphene.ObjectType):
             )
             .select_related('author')
             .prefetch_related('comments', 'likes', 'shares')
-            .all()[offset: offset + limit]
+            .order_by('-created_at')
         )
+
+        if sort_by == 'latest':
+            qs = qs.order_by('-created_at')
+        elif sort_by == 'popular':
+            qs = qs.order_by('-likes_count')
+        elif sort_by == 'engagement':
+            qs = qs.order_by('-comments_count', '-likes_count')
+
+        if after:
+            qs = qs.filter(created_at__lt=after)
+        
+        return qs[:first]
     
     def resolve_post_by_id(self, info, id):
         return(
@@ -112,10 +125,10 @@ class Query(graphene.ObjectType):
     def resolve_my_analytics(self, info):
         user = info.context.user
         if not user.is_authenticated:
-            raise GraphQLError("Authentication required")
+            raise GraphQLError('Authentication required')
 
         analytics, _ = UserAnalytics.objects.get_or_create(user=user)
         return analytics
     
     def resolve_post_metrics(self, info, post_id):
-        return PostDailyMetrics.objects.filter(post_id=post_id).order_by("-date")
+        return PostDailyMetrics.objects.filter(post_id=post_id).order_by('-date')
