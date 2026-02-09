@@ -1,3 +1,21 @@
+DRF - Endpoints
+
+Registration
+{
+    "name": "Ugota Chisom Stephen",
+    "username": "stephen842",
+    "email": "ugotachisomstephen@gmail.com",
+    "password1": "#Platform123",
+    "password2": "#Platform123"
+}
+
+Login
+{
+    "username": "stephen842",
+    "password": "#Platform123"
+}
+
+
 MUTATIONS - WRITE OPERATION
 
 Create Post

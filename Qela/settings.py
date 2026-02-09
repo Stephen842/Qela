@@ -90,7 +90,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'drf_yasg',
-    #'graphene_django_extensions',
 ]
 
 SITE_ID = 1
