@@ -1,0 +1,213 @@
+MUTATIONS - WRITE OPERATION
+
+Create Post
+mutation CreatePost1 {
+  createPost(
+    content: "Blockchain is a decentralized ledger technology that allows digital information to be recorded and shared across a network of computers in a secure and immutable way. Unlike traditional databases, blockchain ensures that no single entity can control or alter the data once it is added to the chain. Key concepts include blocks, cryptographic hashes, and consensus mechanisms like Proof of Work or Proof of Stake. Blockchain underpins cryptocurrencies like Bitcoin and Ethereum and is now applied to supply chain, healthcare, and digital identity systems."
+  ) {
+    post {
+      id
+      content
+      authorUsername
+      createdAt
+    }
+  }
+}
+
+mutation CreatePost2 {
+  createPost(
+    content: "Artificial Intelligence (AI) is rapidly transforming industries through intelligent automation, predictive analytics, and natural language processing. Machine learning allows systems to learn from data, while deep learning simulates neural networks. Ethical concerns such as algorithmic bias, data privacy, and job displacement must be addressed. The future will include collaborative human-AI systems, autonomous vehicles, and AI-driven scientific discoveries."
+  ) {
+    post {
+      id
+      content
+      authorUsername
+      createdAt
+    }
+  }
+}
+
+mutation CreatePost3 {
+  createPost(
+    content: "Sustainable energy focuses on generating power without depleting natural resources or causing environmental harm. Solar, wind, and hydropower are examples of renewable sources. Battery storage, smart grids, and energy-efficient buildings make renewable energy practical. Transitioning to sustainable energy combats climate change, creates economic opportunities, and promotes energy security."
+  ) {
+    post {
+      id
+      content
+      authorUsername
+      createdAt
+    }
+  }
+}
+
+Edit Post
+mutation {
+  editPost(postId: "9", content: "Updated test post content") {
+    post {
+      id
+      content
+      updatedAt
+    }
+  }
+}
+
+Delete Post
+mutation {
+  deletePost(postId: "1") {
+    ok
+  }
+}
+
+Add Comment
+mutation {
+  addComment(postId: "5", content: "Nice post!") {
+    comment {
+      id
+      content
+      createdAt
+    }
+  }
+}
+
+Edit Comment
+mutation {
+  editComment(commentId: "1", content: "Updated comment") {
+    comment {
+      id
+      content
+      createdAt
+    }
+  }
+}
+
+Delete Comment
+mutation {
+  deleteComment(commentId: "1") {
+    ok
+  }
+}
+
+Like Post
+mutation {
+  likePost(postId: "10") {
+    ok
+  }
+}
+
+Unlike Post
+mutation {
+  unlikePost(postId: "10") {
+    ok
+  }
+}
+
+
+Bookmarking A Post
+mutation {
+  bookmarkPost(postId: "6") {
+    ok
+  }
+}
+
+UnBookmarking A Post
+mutation {
+  unbookmarkPost(postId: "8") {
+    ok
+  }
+}
+
+Follow A user
+mutation {
+  followUser(userId: "1") {
+    ok
+  }
+}
+
+Unfollow a user
+mutation {
+  unfollowUser(userId: "1") {
+    ok
+  }
+}
+
+SharePost
+mutation {
+  sharePost(postId: "8") {
+    ok
+  }
+}
+
+QUERIES - READ-ONLY Operations
+
+All Posts
+query {
+  allPosts(first: 10, sortBy: "latest") {
+    id
+    content
+    createdAt
+    likesCount
+    commentsCount
+    sharesCount
+    authorUsername
+  }
+}
+
+Get a single post by id
+query {
+  postById(id: "3") {
+    id
+    content
+    createdAt
+    likesCount
+    commentsCount
+    sharesCount
+    authorUsername
+  }
+}
+
+Personalized Feed
+query {
+  myFeed(first: 10) {
+    id
+    content
+    createdAt
+    authorUsername
+    likesCount
+    commentsCount
+    sharesCount
+    likedByMe
+    bookmarkedByMe
+  }
+}
+
+Bookmarked Posts
+query {
+  myBookmarks {
+    id
+    content
+    createdAt
+    authorUsername
+    likesCount
+  }
+}
+
+Get your analytics
+query {
+  myAnalytics {
+    totalLikesRecieved
+    totalCommentsRecieved
+    totalSharesRecieved
+    totalPosts
+    updatedAt
+  }
+}
+
+Daily Metric for a post
+query {
+  postMetrics(postId: "4") {
+    date
+    likes
+    comments
+    shares
+  }
+}
