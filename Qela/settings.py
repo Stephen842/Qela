@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
+    'graphene_django',
     'csp',
 
     # OAuth Authentication
@@ -87,6 +88,9 @@ INSTALLED_APPS = [
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'rest_framework.authtoken',
+
+    'drf_yasg',
+    #'graphene_django_extensions',
 ]
 
 SITE_ID = 1
@@ -113,6 +117,8 @@ MIDDLEWARE = [
 
     # Required by allauth
     'allauth.account.middleware.AccountMiddleware',
+
+    'feed.middleware.GraphQLJWTMiddleware',
 ]
 
 ROOT_URLCONF = 'Qela.urls'
@@ -268,6 +274,7 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.UserRateThrottle',
         'rest_framework.throttling.AnonRateThrottle',
     ],
+
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
         'user': '1000/day',
@@ -283,6 +290,13 @@ REST_FRAMEWORK = {
         'google_login': '3/min',
         'account_deactivate': '2/day',
     },
+
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+}
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'DEFAULT_INFO': 'Qela.urls.schema_view',
 }
 
 SIMPLE_JWT = {
@@ -372,6 +386,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+STATIC_ROOT = BASE_DIR / 'StaticFiles'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -389,5 +407,5 @@ DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER')
 FRONTEND_URL = config('FRONTEND_URL')
 
 GRAPHENE = {
-    'SCHEMA': 'feed.schema.schema'
+    'SCHEMA': 'feed.schema.schema',
 }

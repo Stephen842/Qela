@@ -18,7 +18,22 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
+
 from feed.schema import schema
+
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework.permissions import AllowAny
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title='Qela Authentication and User Profile API Documentation',
+        default_version='v1.0',
+    ),
+    public=True,
+    permission_classes=[AllowAny],
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,5 +46,8 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # GraphQL endpoint
-    path('graphql/', GraphQLView.as_view(graphiql=True, schema=schema)),
+    path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
+
+    # API Documentation
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
 ]
