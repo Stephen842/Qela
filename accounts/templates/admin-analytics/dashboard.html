@@ -1,291 +1,447 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title> {{ title }} </title>
+        <title>{{ title }}</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
 
         <style>
-            body {
-                background-color: #F8FAFC;
-                font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            body { 
+                background-color: #fbfcfd; 
+                font-family: 'Plus Jakarta Sans', sans-serif; 
+                color: #0f172a;
             }
-            .card { @apply bg-white p-6 rounded-3xl shadow-sm border border-gray-100; }
-            .nav-pill { @apply px-4 py-2 rounded-full transition-all duration-200; }
+            .trend-card {
+                @apply bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)] transition-all duration-300;
+            }
+            .trend-card:hover {
+                @apply shadow-[0_30px_60px_rgba(0,0,0,0.05)] -translate-y-1;
+            }
+            .security-gradient {
+                background: linear-gradient(145deg, #0f172a, #1e293b);
+            }
+            .nav-active {
+                @apply bg-blue-600 text-white shadow-lg shadow-blue-200;
+            }
+            canvas { filter: drop-shadow(0 10px 10px rgba(0,0,0,0.02)); }
+
+            /* The "Ping" effect for the dots */
+            @keyframes markerPing {
+                0% {
+                    stroke-width: 2px;
+                    stroke-opacity: 1;
+                    r: 5;
+                }
+                100% {
+                    stroke-width: 20px;
+                    stroke-opacity: 0;
+                    r: 10;
+                }
+            }
+
+            .map-marker-ping {
+                animation: markerPing 2s infinite ease-out;
+                filter: drop-shadow(0 0 5px #3b82f6);
+            }
+
+            /* Optional: Soft glow for the active countries */
+            .map-region-glow {
+                transition: fill 0.5s ease;
+            }
+
+            .map-region-glow:hover {
+                filter: brightness(1.2) drop-shadow(0 0 2px #3b82f6);
+            }
         </style>
     </head>
-    <body class="p-4 md:p-8">
-        <header class="flex flex-col md:flex-row justify-between items-center mb-16 mt-4 px-4 md:px-6 gap-8">
-    
+    <body class="p-6 lg:p-10">
+        <header class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center mb-16 gap-8">
             <div class="flex items-center gap-4">
-                <div class="qela-logo text-2xl text-3xl font-semibold tracking-wider">
-                    <span class="text-gray-800">Q</span><span class="text-[#D4A94A]">ELA</span>
+                <div>
+                    <div class="text-2xl font-black tracking-tighter text-slate-900">
+                        <span class="text-gray-800">Q</span><span class="text-[#D4A94A]">ELA</span>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-400">System Core v2.0</p>
                 </div>
             </div>
 
-            <nav class="bg-white px-4 py-2.5 rounded-full shadow-sm border border-gray-100 flex items-center gap-2">
-                <a href="#" class="px-6 py-2.5 text-sm font-bold text-black bg-yellow-300 rounded-full shadow-sm transition-all"> Dashboard </a>
-                <a href="#" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-all"> Users </a>
-                <a href="#" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-all"> Session Tracking</a>
-                <a href="#" class="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 rounded-full transition-all"> IP Reports </a>
+            <nav class="bg-slate-100/50 backdrop-blur-md p-1.5 rounded-3xl flex gap-1 border border-white">
+                <a href="{% url 'admin-dashboard' %}" class="nav-active px-8 py-3 rounded-2xl text-sm font-bold transition-all">Dashboard</a>
+                <a href="{% url 'admin-users' %}" class="px-8 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-900 transition-all">Users</a>
+                <a href="#" class="px-8 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-900 transition-all">Session Tracking</a>
+                <a href="#" class="px-8 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-900 transition-all">IP Reports</a>
             </nav>
 
-
-            <div class="flex items-center gap-8">
-                <div class="flex items-center gap-6 border-r border-gray-100 pr-6">
-                    <button class="text-gray-400 hover:text-blue-600 transition-colors">
-                        <i class="fas fa-search text-lg"></i>
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <button class="w-12 h-12 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
+                        <i class="far fa-bell text-lg"></i>
                     </button>
-                    <button class="text-gray-400 hover:text-blue-600 transition-colors relative">
-                        <i class="fas fa-bell text-lg"></i>
-                        <span class="absolute -top-1 -right-1 bg-red-500 h-2.5 w-2.5 rounded-full border-2 border-white"></span>
-                    </button>
+                    <span class="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
                 </div>
-                
-                <div class="flex items-center gap-3">
-                    <div class="text-right hidden lg:block">
-                        <p class="text-sm font-bold text-gray-900 leading-none">{{ request.user.name }}</p>
-                        <p class="text-xs text-gray-400 mt-1">Platform Admin</p>
-                    </div>
-                    <img src="https://ui-avatars.com/api/?name={{ request.user.name }}&background=6366f1&color=fff" class="w-12 h-12 rounded-2xl border-2 border-white shadow-md object-cover">
+                <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.name }}&background=D4A94A&color=fff" 
+                        class="w-12 h-12 rounded-2xl shadow-lg border-2 border-white object-cover">
                 </div>
             </div>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
-
-            <!-- LEFT STATS COLUMN -->
-            <div class="md:col-span-3 flex flex-col gap-6">
-                <div class="card">
-                    <div class="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 mb-4">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <p class="text-gray-500 text-sm font-medium">Total Users</p>
-                    <div class="flex items-end gap-2">
-                        <h2 class="text-3xl font-bold text-gray-800">{{ total_users|default:"128,420" }}</h2>
-                        <span class="text-green-500 text-xs font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+25%</span>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="bg-red-50 w-10 h-10 rounded-lg flex items-center justify-center text-red-600 mb-4">
-                        <i class="fas fa-heart"></i>
-                    </div>
-                    <p class="text-gray-500 text-sm font-medium">Active Users</p>
-                    <div class="flex items-end gap-2">
-                        <h2 class="text-3xl font-bold text-gray-800">{{ active_users|default:"66,816" }}</h2>
-                        <span class="text-green-500 text-xs font-bold mb-1 bg-green-50 px-2 py-0.5 rounded-full">+32%</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CENTER USER GROWTH CHART -->
-            <div class="md:col-span-4 card">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 class="font-bold text-gray-800">User Growth</h3>
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl font-bold">2,420</span>
-                            <span class="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full font-bold">↑ 28%</span>
+        <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-3 flex flex-col gap-6">
+                <div class="trend-card p-7">
+                    <div class="flex justify-between items-start mb-5">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                            <i class="fas fa-users text-xl"></i>
                         </div>
+                        <span class="font-bold text-[10px] px-2 py-1 rounded-lg transition-colors duration-500
+                            {% if user_growth_percent > 0 %} 
+                                text-green-600 bg-green-50/50 border border-green-100
+                            {% elif user_growth_percent < 0 %} 
+                                text-red-600 bg-red-50/50 border border-red-100
+                            {% else %} 
+                                text-slate-400 bg-slate-50 border border-slate-100
+                            {% endif %}">
+                            
+                            {% if user_growth_percent > 0 %}+{% endif %}{{ user_growth_percent }}%
+                            
+                            <i class="fas {% if user_growth_percent > 0 %}fa-arrow-trend-up{% elif user_growth_percent < 0 %}fa-arrow-trend-down{% else %}fa-minus{% endif %} ml-1 text-[8px]"></i>
+                        </span>
                     </div>
-                    <button class="text-gray-300"><i class="fas fa-ellipsis-v"></i></button>
+                    <h3 class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.15em]">Total Ecosystem Users</h3>
+                    <p class="text-4xl font-black text-slate-900 mt-1">{{ total_users|default:"0" }}</p>
                 </div>
-                <canvas id="ctrChart" height="250"></canvas>
+
+                <div class="trend-card p-7 bg-blue-600 text-white shadow-blue-200">
+                    <div class="flex justify-between items-start mb-5">
+                        <div class="p-3 bg-white/10 rounded-2xl">
+                            <i class="fas fa-fingerprint text-xl text-blue-100"></i>
+                        </div>
+                        <span class="text-blue-100/60 text-[10px] font-bold uppercase tracking-tighter">Verified</span>
+                    </div>
+                    <h3 class="text-blue-100/80 text-[10px] font-bold uppercase tracking-[0.15em]">Verified Users</h3>
+                    <p class="text-4xl font-black mt-1">{{ verified_users|default:"0" }}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="trend-card p-5 border-slate-50">
+                        <h3 class="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Deactivated</h3>
+                        <p class="text-lg font-black text-slate-400 mt-1">{{ deactivated_users|default:"0" }}</p>
+                    </div>
+                    <div class="trend-card p-5 border-blue-50">
+                        <h3 class="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Active Users</h3>
+                        <p class="text-lg font-black text-blue-600 mt-1">{{ active_users|default:"0" }}</p>
+                    </div>
+                </div>
+
+                <div class="trend-card p-6">
+                    <h3 class="text-slate-900 text-xs font-bold mb-5 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></span>
+                        Top Active Users
+                    </h3>
+
+                    <div class="space-y-4">
+                        {% for top_user in top_active_users|slice:":3" %}
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold text-slate-500 truncate w-24">{{ top_user.user__email }}</span>
+                            <span class="text-[10px] font-black text-slate-900 bg-slate-50 px-2 py-0.5 rounded">{{ top_user.total_requests }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
 
-            <!-- NEW SIGNUPS -->
-            <div class="md:col-span-5 card relative">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-gray-800">New Signups (Last 7 Days)</h3>
-                    <div class="bg-gray-100 p-1 rounded-full flex text-xs font-bold">
-                        <span class="px-3 py-1 text-gray-400">Today</span>
-                        <span class="px-3 py-1 bg-yellow-300 rounded-full text-black">This Week</span>
-                    </div>
-                </div>
-                <canvas id="growthChart" height="200"></canvas>
-            </div>
-
-            <!-- AUDIENCE LOCATION -->
-            <div class="lg:col-span-8 card p-12 rounded-3xl">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-900">Audience Location</h3>
-                        <p class="text-gray-400 text-sm mt-1">
-                            Global distribution of your active user base
-                        </p>
-                    </div>
-                    <button class="flex items-center gap-2 text-gray-600 text-sm font-bold 
-                                border border-gray-200 px-6 py-3 rounded-xl hover:bg-gray-50 transition-all">
-                        <i class="fas fa-download text-xs"></i> Export Report
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-14">
-                    <div class="bg-slate-50 rounded-3xl flex items-center justify-center p-8 
-                                min-h-[300px] border border-dashed border-gray-200">
-                        <div class="text-center">
-                            <i class="fas fa-map-marked-alt text-gray-300 text-5xl mb-4"></i>
-                            <p class="text-gray-400 font-medium italic">
-                                Interactive Map Module
+            <div class="lg:col-span-9">
+                <div class="trend-card p-10 h-full flex flex-col">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Platform Growth</h2>
+                            <p class="text-slate-400 text-sm mt-1">
+                                Analyzing the influx of <span class="text-blue-600 font-bold">{{ new_users_this_week }} users</span> over the last 7 days.
                             </p>
                         </div>
+                        <div class="bg-slate-50 p-1 rounded-xl flex gap-1">
+                            <button class="px-4 py-2 bg-white shadow-sm rounded-lg text-[10px] font-bold text-slate-900">Signups</button>
+                            <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-all">Sessions</button>
+                        </div>
+                    </div>
+                    <div class="flex-grow min-h-[400px]">
+                        <canvas id="mainGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            {{ signup_data_last_7_days|json_script:"chart-data" }}
+
+            <div class="lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:mt-5">
+                <div class="lg:col-span-8 trend-card p-0 overflow-hidden bg-[#0f172a] border-none shadow-2xl flex flex-col justify-between">
+                    <div class="p-8 pb-0">
+                        <h3 class="text-xl font-extrabold text-white mb-1">Global Audience Reach</h3>
+                        <p class="text-slate-500 text-xs">Real-time geospatial distribution of active users.</p>
                     </div>
 
-                    <div class="flex flex-col justify-center">
-                        <h4 class="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">
-                            Top Performance by Region
-                        </h4>
+                    <div id="world-map" class="w-full" style="height: 400px;"></div>
 
-                        <div class="space-y-7">
-                            {% for country in top_countries %}
-                            <div class="group">
-                                <div class="flex justify-between mb-2">
-                                    <span class="text-sm font-bold text-gray-700">
-                                        {{ country.name }}
-                                    </span>
-                                    <span class="text-sm font-extrabold text-gray-900">
-                                        {{ country.percent }}%
-                                    </span>
-                                </div>
-                                <div class="w-full bg-gray-100 h-3 rounded-full overflow-hidden">
-                                    <div class="bg-blue-600 h-full rounded-full transition-all duration-1000 group-hover:bg-blue-400" style="width: {{ country.percent }}">
+                    <div class="bg-slate-900/80 backdrop-blur-md p-6 grid grid-cols-3 gap-6 border-t border-white/5">
+                        {% for country in top_countries|slice:":5" %} <div class="group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-slate-500">{{ country.name }}</span>
+                                <span class="text-xs font-black text-blue-400">{{ country.percent }}%</span>
+                            </div>
+                            <div class="w-full h-1 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 rounded-full" style="width: {{ country.percent }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {{ all_countries|json_script:"map-data" }}
+
+                <div class="lg:col-span-4 trend-card security-gradient p-10 text-white relative overflow-hidden flex flex-col justify-between border-none shadow-2xl min-h-[550px]">
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px]"></div>
+                    <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-red-500/5 rounded-full blur-[100px]"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-center mb-12">
+                            <h3 class="font-bold tracking-[0.2em] text-[10px] uppercase text-blue-400">Security Analytics</h3>
+                            <div class="flex items-center gap-2 px-4 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 rounded-full text-[9px] font-black tracking-widest">
+                                <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> NOMINAL
+                            </div>
+                        </div>
+
+                        <div class="space-y-12">
+                            <div>
+                                <p class="text-slate-500 text-[9px] uppercase font-black tracking-widest mb-5">Threat Intelligence</p>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-sm transition-hover hover:bg-white/10">
+                                        <p class="text-slate-400 text-[10px] font-bold mb-2">Suspicious</p>
+                                        <span class="text-3xl font-black text-red-400">{{ suspicious_ips|default:"0" }}</span>
+                                    </div>
+                                    <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 backdrop-blur-sm transition-hover hover:bg-white/10">
+                                        <p class="text-slate-400 text-[10px] font-bold mb-2">Blacklisted</p>
+                                        <span class="text-3xl font-black text-slate-100">{{ blacklisted_ips|default:"0" }}</span>
                                     </div>
                                 </div>
                             </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- RIGHT COLUMN -->
-            <div class="lg:col-span-4 flex flex-col gap-10">
+                            <div>
+                                <p class="text-slate-500 text-[9px] uppercase font-black tracking-widest mb-5">Network Infrastructure</p>
+                                <div class="space-y-6">
+                                    <div class="flex justify-between items-center group">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                                <i class="fas fa-laptop-code text-blue-400 text-xs"></i>
+                                            </div>
+                                            <span class="text-slate-300 text-sm font-medium">Unique Devices</span>
+                                        </div>
+                                        <span class="text-lg font-black text-white">{{ unique_devices|default:"0" }}</span>
+                                    </div>
 
-                <!-- SECURITY CARD -->
-                <div class="card bg-gray-900 text-white p-10 rounded-3xl shadow-xl">
-                    <div class="flex justify-between items-center mb-8">
-                        <h3 class="font-bold text-lg tracking-tight">Security Health</h3>
-                        <span class="h-3 w-3 bg-green-500 rounded-full animate-pulse"></span>
-                    </div>
+                                    <div class="flex justify-between items-center group">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                                <i class="fas fa-user-shield text-blue-400 text-xs"></i>
+                                            </div>
+                                            <span class="text-slate-300 text-sm font-medium">Platform Admins</span>
+                                        </div>
+                                        <span class="text-lg font-black text-white">{{ platform_admins|default:"0" }}</span>
+                                    </div>
 
-                    <div class="space-y-6">
-                        <div class="flex justify-between items-center bg-white/5 p-5 rounded-2xl border border-white/10">
-                            <span class="text-gray-400 text-sm">Suspicious IPs</span>
-                            <span class="text-red-400 font-bold text-lg">
-                                {{ suspicious_ips|default:"0" }}
-                            </span>
-                        </div>
-
-                        <div class="flex justify-between items-center bg-white/5 p-5 rounded-2xl border border-white/10">
-                            <span class="text-gray-400 text-sm">Active Sessions</span>
-                            <span class="text-green-400 font-bold text-lg">
-                                {{ active_sessions|default:"12" }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="mt-10 pt-10 border-t border-white/10 text-center">
-                        <div class="text-6xl font-black text-white tracking-tighter">
-                            98.2<span class="text-xl text-gray-500 ml-1">%</span>
-                        </div>
-                        <div class="text-[10px] uppercase font-bold tracking-[0.2em] text-gray-500 mt-2">
-                            Safety Score
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STAFF ACCESS -->
-                <div class="card p-10 rounded-3xl">
-                    <h3 class="text-lg font-bold text-gray-900 mb-6">Platform Admins</h3>
-
-                    <div class="flex items-center gap-4 mb-8">
-                        <div class="text-5xl font-black text-gray-900">
-                            {{ platform_admins|default:"5" }}
-                        </div>
-                        <div class="text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-lg">
-                            Admin Level
+                                    <div class="flex justify-between items-center group">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                                <i class="fas fa-broadcast-tower text-blue-400 text-xs"></i>
+                                            </div>
+                                            <span class="text-slate-300 text-sm font-medium">Active Sessions</span>
+                                        </div>
+                                        <span class="text-lg font-black text-blue-400">{{ active_sessions|default:"0" }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="flex -space-x-4 mb-8">
-                        <img class="h-12 w-12 rounded-2xl ring-4 ring-white object-cover"
-                            src="https://i.pravatar.cc/150?u=1">
-                        <img class="h-12 w-12 rounded-2xl ring-4 ring-white object-cover"
-                            src="https://i.pravatar.cc/150?u=2">
-                        <img class="h-12 w-12 rounded-2xl ring-4 ring-white object-cover"
-                            src="https://i.pravatar.cc/150?u=3">
-                        <div class="h-12 w-12 rounded-2xl bg-gray-50 flex items-center justify-center 
-                                    text-xs font-bold text-gray-400 ring-4 ring-white border border-gray-100">
-                            +{{ platform_admins|add:"-3" }}
-                        </div>
+                    <div class="pt-10 relative z-10">
+                        <button class="w-full py-5 bg-blue-600 rounded-[1.5rem] text-[10px] uppercase tracking-[0.3em] font-black text-white shadow-lg shadow-blue-600/20 hover:bg-blue-500 hover:-translate-y-1 transition-all active:scale-95">
+                            Initialize Deep Scan
+                        </button>
                     </div>
-
-                    <button class="w-full py-4 rounded-2xl bg-gray-50 text-gray-500 font-bold text-sm 
-                                hover:bg-gray-100 transition-all flex justify-center items-center gap-2">
-                        Manage Permissions 
-                        <i class="fas fa-chevron-right text-[10px]"></i>
-                    </button>
                 </div>
             </div>
         </main>
-        <footer>
-            <h2> &copy; {% now "Y" %} QELA. All rights reserved. </h2>
+
+        <footer class="w-full py-4 border-t border-white/5 mt-10">
+            <div class="flex justify-center items-center">
+                <h2 class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">
+                    &copy; {% now "Y" %} <span class="text-slate-300">QELA</span>. All rights reserved.
+                </h2>
+            </div>
         </footer>
 
-
         <script>
-            // CTR/User Growth Bar Chart
-            const ctxCtr = document.getElementById('ctrChart').getContext('2d');
-            new Chart(ctxCtr, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
-                    datasets: [{
-                        label: 'New Users',
-                        data: [12, 19, 13, 15, 22, 20],
-                        backgroundColor: '#F97316',
-                        borderRadius: 5,
-                        barThickness: 15,
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { display: false }, x: { grid: { display: false } } }
+            document.addEventListener('DOMContentLoaded', () => {
+                // Find the data embedded by Django
+                const dataElement = document.getElementById('chart-data');
+                
+                if (!dataElement) {
+                    console.error("Chart data element not found!");
+                    return;
                 }
+
+                const rawData = JSON.parse(dataElement.textContent);
+                
+                // Transform the list of dicts into arrays for Chart.js
+                const labels = rawData.map(item => item.day);
+                const values = rawData.map(item => item.count);
+
+                const canvas = document.getElementById('mainGrowthChart');
+                if (!canvas) return;
+
+                const ctx = canvas.getContext('2d');
+                
+                const fillGradient = ctx.createLinearGradient(0, 0, 0, 400);
+                fillGradient.addColorStop(0, 'rgba(59, 130, 246, 0.15)');
+                fillGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'New Signups',
+                            data: values,
+                            borderColor: '#3B82F6',
+                            borderWidth: 3,
+                            tension: 0.45, 
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            fill: true,
+                            backgroundColor: fillGradient,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1e293b',
+                                padding: 12,
+                                displayColors: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f1f5f9' },
+                                ticks: { 
+                                    color: '#94a3b8',
+                                    callback: (value) => value.toLocaleString() 
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
             });
 
-            // Audience Growth Line Chart
-            const ctxGrowth = document.getElementById('growthChart').getContext('2d');
-            const gradient = ctxGrowth.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            document.addEventListener('DOMContentLoaded', () => {
+                const mapDataElement = document.getElementById('map-data');
+                if (!mapDataElement) return;
 
-            new Chart(ctxGrowth, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Jun', 'Jul', 'Aug'],
-                    datasets: [{
-                        data: [10, 40, 35, 45, 40, 50, 65],
-                        borderColor: '#3B82F6',
-                        borderWidth: 3,
-                        tension: 0.4,
-                        fill: true,
-                        backgroundColor: gradient,
-                        pointRadius: 0,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
-                }
+                const mapData = JSON.parse(mapDataElement.textContent);
+                
+                // 1. Heatmap Data: Colors the country landmass based on user density
+                const countryValues = {};
+                mapData.forEach(c => { 
+                    if (c.code) countryValues[c.code] = c.percent; 
+                });
+
+                // 2. Marker Data: Creates a glowing dot for EVERY country in your DB
+                const markers = mapData
+                    .filter(c => c.coords && (c.coords[0] !== 0 || c.coords[1] !== 0))
+                    .map(c => ({
+                        name: c.name,
+                        coords: c.coords,
+                        style: { 
+                            fill: '#3b82f6', 
+                            r: 5 
+                        }
+                    }));
+
+                // 3. Initialize jsVectorMap
+                const map = new jsVectorMap({
+                    selector: '#world-map',
+                    map: 'world',
+                    backgroundColor: 'transparent',
+                    draggable: true,
+                    zoomOnScroll: false,
+                    
+                    // Apply our dots
+                    markers: markers,
+                    
+                    markerStyle: {
+                        initial: {
+                            stroke: '#60a5fa',
+                            strokeWidth: 2,
+                            fillOpacity: 1
+                        },
+                        hover: {
+                            fill: '#ffffff',
+                            stroke: '#3b82f6',
+                            cursor: 'pointer'
+                        }
+                    },
+
+                    regionStyle: {
+                        initial: {
+                            fill: '#1e293b', 
+                            stroke: '#334155',
+                            strokeWidth: 0.5
+                        },
+                        hover: {
+                            fill: '#334155'
+                        }
+                    },
+
+                    // Heatmap config
+                    visualizeData: {
+                        scale: ['#1e293b', '#3b82f6'], 
+                        values: countryValues
+                    },
+
+                    // 4. Effects on Load
+                    onLoaded(map) {
+                        // Apply the 'ping' animation to all dots
+                        const markerElements = document.querySelectorAll('.jvm-marker');
+                        markerElements.forEach(el => {
+                            el.classList.add('map-marker-ping');
+                        });
+
+                        // Soft glow for countries with users
+                        mapData.forEach(country => {
+                            const region = document.querySelector(`[data-code="${country.code}"]`);
+                            if (region) {
+                                region.classList.add('map-region-glow');
+                            }
+                        });
+
+                        // Force a window resize trigger to ensure map draws correctly in grid
+                        window.dispatchEvent(new Event('resize'));
+                    }
+                });
             });
         </script>
     </body>

@@ -19,6 +19,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from graphene_django.views import GraphQLView
 from django.views.decorators.csrf import csrf_exempt
+from django.conf.urls import handler404, handler500
 
 from feed.schema import schema
 
@@ -51,3 +52,6 @@ urlpatterns = [
     # API Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0)),
 ]
+
+handler404 = 'feed.views.custom_404_view'
+handler500 = 'feed.views.custom_500_view'

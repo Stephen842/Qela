@@ -1,0 +1,2 @@
+2026-02-14 00:29:09.638 WAT [34448] FATAL:  lock file "postmaster.pid" already exists
+2026-02-14 00:29:09.638 WAT [34448] HINT:  Is another postmaster (PID 34419) running in data directory "/Users/mac/postgres_data"?
