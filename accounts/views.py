@@ -341,10 +341,10 @@ class AdminUserListView(APIView):
                 'inactive': total_inactive,
                 'verified': total_verified,
             },
-            'title': 'QELA | User Registry',
+            'title': 'QELA | Admin User Registry',
         }
         
-        return render(request, 'admin-analytics/sessions.html', context)
+        return render(request, 'admin-analytics/users.html', context)
     
     def post(self, request):
         '''Handle status toggling'''
@@ -368,12 +368,20 @@ class AdminUserListView(APIView):
 class AdminProfileListView(APIView):
     permission_classes = [IsAuthenticated, IsPlatformAdmin]
 
-    def get(self, request):
-        profiles = UserProfile.objects.select_related('user').all()
+    def get(self, request, username):
+        # Fetch user or 404
+        user_obj = get_object_or_404(User.objects.select_related('profile'), username__iexact=username)
+        
+        # Calculate account age
+        account_age = (timezone.now() - user_obj.date_joined).days
+
         context = {
-            'profiles': profiles
+            'user': user_obj,
+            'profile': user_obj.profile,
+            'account_age': account_age,
+            'title': f'Qela | User Profile -  {user_obj.username}'
         }
-        return render(request, 'admin_analytics/profiles.html', context)
+        return render(request, 'admin-analytics/profiles.html', context)
 
 
 class AdminSessionListView(APIView):
@@ -384,7 +392,7 @@ class AdminSessionListView(APIView):
         context = {
             'sessions': sessions
         }
-        return render(request, 'admin_analytics/sessions.html', context)
+        return render(request, 'admin-analytics/sessions.html', context)
 
 
 class AdminIPActivityView(APIView):
@@ -395,7 +403,7 @@ class AdminIPActivityView(APIView):
         context = {
             'logs': logs
         }
-        return render(request, 'admin_analytics/ip_activity.html', context)
+        return render(request, 'admin-analytics/ip_activity.html', context)
 
 
 class AdminBlacklistView(APIView):

@@ -45,7 +45,7 @@ urlpatterns = [
     # -------------------------
     path('super-admin-dashboard/', AdminDashboardView.as_view(), name='admin-dashboard'),
     path('users/', AdminUserListView.as_view(), name='admin-users'),
-    path('profiles/', AdminProfileListView.as_view(), name='admin-profiles'),
+    path('users/<str:username>/profile/', AdminProfileListView.as_view(), name='admin-profiles'),
     path('sessions/', AdminSessionListView.as_view(), name='admin-sessions'),
     path('ip-activity/', AdminIPActivityView.as_view(), name='admin-ip-activity'),
     path('blacklist/', AdminBlacklistView.as_view(), name='admin-blacklist'),
