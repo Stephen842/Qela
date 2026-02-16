@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ title }}</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+        <style>
+            body { 
+                background-color: #fbfcfd; 
+                font-family: 'Plus Jakarta Sans', sans-serif; 
+                color: #0f172a;
+            }
+            .nav-active {
+                @apply bg-blue-600 text-white shadow-lg shadow-blue-200;
+            }
+        </style>
+    </head>
+    <body class="p-6 lg:p-10">
+        <header class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center mb-16 gap-8">
+            <div class="flex items-center gap-4">
+                <div>
+                    <div class="text-2xl font-black tracking-tighter text-slate-900">
+                        <span class="text-gray-800">Q</span><span class="text-[#D4A94A]">ELA</span>
+                    </div>
+                    <p class="text-[10px] uppercase tracking-[0.3em] font-bold text-slate-400">System Core v2.0</p>
+                </div>
+            </div>
+
+            <nav class="bg-slate-100/50 backdrop-blur-md p-1.5 rounded-3xl flex gap-1 border border-white">
+                <a href="{% url 'admin-dashboard' %}" class="nav-active px-8 py-3 rounded-2xl text-sm font-bold transition-all">Dashboard</a>
+                <a href="{% url 'admin-users' %}" class="px-8 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-900 transition-all">Users</a>
+                <a href="{% url 'admin-sessions' %}" class="px-8 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-900 transition-all">Session Tracking</a>
+                <a href="#" class="px-8 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-white hover:text-slate-900 transition-all">IP Reports</a>
+            </nav>
+
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <button class="w-12 h-12 rounded-2xl bg-white border border-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
+                        <i class="far fa-bell text-lg"></i>
+                    </button>
+                    <span class="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+                </div>
+                <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+                    <img src="https://ui-avatars.com/api/?name={{ request.user.name }}&background=D4A94A&color=fff" class="w-12 h-12 rounded-2xl shadow-lg border-2 border-white object-cover">
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="p-6">
+                <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">System Sessions</h2>
+                        <p class="text-xs text-slate-500">Monitoring all active and historical device access</p>
+                    </div>
+
+                    <form method="GET" class="flex items-center gap-3">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                            <input type="text" name="search" value="{{ request.GET.search|default:'' }}" placeholder="Search Email or IP..." class="pl-9 pr-4 py-1.5 border border-slate-200 rounded-md text-xs focus:ring-2 focus:ring-blue-500 outline-none w-64">
+                        </div>
+                        
+                        <select name="status" onchange="this.form.submit()" 
+                                class="pl-3 pr-8 py-1.5 border border-slate-200 rounded-md text-xs font-semibold text-slate-600 bg-white outline-none">
+                            <option value="">All Sessions</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active Only</option>
+                        </select>
+
+                        {% if request.GET.search or request.GET.status %}
+                            <a href="{% url 'admin-sessions' %}" class="text-[10px] font-bold text-blue-500 uppercase tracking-tighter">Clear</a>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <div class="bg-white border border-slate-100 rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-400">User / Email</th>
+                                <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-400">Device Info</th>
+                                <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-400">Network Info</th>
+                                <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-400">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for session in sessions %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="text-xs font-bold text-slate-700">{{ session.user.email }}</div>
+                                    <div class="text-[10px] text-slate-400">UID: {{ session.user.id }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        {% if "Mobile" in session.user_agent %}
+                                            <i class="fas fa-mobile-alt text-slate-400 text-xs"></i>
+                                        {% else %}
+                                            <i class="fas fa-desktop text-slate-400 text-xs"></i>
+                                        {% endif %}
+                                        <span class="text-xs font-medium text-slate-600">{{ session.browser }} on {{ session.os }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-xs font-mono text-slate-600">{{ session.ip_address }}</div>
+                                    <div class="text-[10px] text-slate-400 italic">Last active: {{ session.last_active|timesince }} ago</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if session.is_active %}
+                                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">ACTIVE</span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold">EXPIRED</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400 text-xs italic">
+                                    No sessions found matching your criteria.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer class="w-full py-4 border-t border-white/5 mt-10">
+            <div class="flex justify-center items-center">
+                <h2 class="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">
+                    &copy; {% now "Y" %} <span class="text-slate-300">QELA</span>. All rights reserved.
+                </h2>
+            </div>
+        </footer>
+    </body>
+</html>

@@ -6,26 +6,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         users_data = [
-            ('Adrian Cole', 'adrianc76', 'adrian.cole@example.com'),
-            ('Bianca Reyes', 'biancar77', 'bianca.reyes@example.com'),
-            ('Carter Blake', 'carterb78', 'carter.blake@example.com'),
-            ('Diana Prince', 'dianap79', 'diana.prince@example.com'),
-            ('Evan Turner', 'evant80', 'evan.turner@example.com'),
-            ('Freya Morgan', 'freyam81', 'freya.morgan@example.com'),
-            ('Gabriel Knight', 'gabrielk82', 'gabriel.knight@example.com'),
-            ('Hailey Brooks', 'haileyb83', 'hailey.brooks@example.com'),
-            ('Isaiah Coleman', 'isaiahc84', 'isaiah.coleman@example.com'),
-            ('Jasmine Patel', 'jasminep85', 'jasmine.patel@example.com'),
-            ('Kai Anderson', 'kaia86', 'kai.anderson@example.com'),
-            ('Liam Bennett', 'liamb87', 'liam.bennett@example.com'),
-            ('Mila Rodriguez', 'milar88', 'mila.rodriguez@example.com'),
-            ('Noah Thompson', 'noaht89', 'noah.thompson@example.com'),
-            ('Olive Harper', 'oliveh90', 'olive.harper@example.com'),
-            ('Preston Hughes', 'prestonh91', 'preston.hughes@example.com'),
-            ('Riley Sanders', 'rileys92', 'riley.sanders@example.com'),
-            ('Sophia Lawson', 'sophial93', 'sophia.lawson@example.com'),
-            ('Tristan Moore', 'tristanm94', 'tristan.moore@example.com'),
-            ('Valerie Stone', 'valeries95', 'valerie.stone@example.com'),
+            ('Zion Matthews', 'zionm96', 'zion.matthews@example.com'),
+            ('Amara Okafor', 'amarao97', 'amara.okafor@example.com'),
+            ('Declan Walsh', 'declanw98', 'declan.walsh@example.com'),
+            ('Elena Kovacs', 'elenak99', 'elena.kovacs@example.com'),
+            ('Marcus Delgado', 'marcusd100', 'marcus.delgado@example.com'),
         ]
 
         for name, username, email in users_data:

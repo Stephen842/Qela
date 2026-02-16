@@ -389,6 +389,19 @@ class AdminSessionListView(APIView):
 
     def get(self, request):
         sessions = UserSession.objects.select_related('user').all()
+        
+        status = request.GET.get('status')
+        if status == 'active':
+            sessions = sessions.filter(is_active=True)
+
+        search = request.GET.get('search')
+        if search:
+            sessions = sessions.filter(
+                Q(user__email__icontains=search) | 
+                Q(ip_address__icontains=search) |
+                Q(browser__icontains=search)
+            )
+
         context = {
             'sessions': sessions
         }
@@ -399,7 +412,12 @@ class AdminIPActivityView(APIView):
     permission_classes = [IsAuthenticated, IsPlatformAdmin]
 
     def get(self, request):
-        logs = IPActivity.objects.all().order_by('-last_seen')
+        logs = IPActivity.objects.select_related('user').all().order_by('-last_seen')
+        
+        # Quick filter for security threats
+        if request.GET.get('filter') == 'suspicious':
+            logs = logs.filter(is_suspicious=True)
+
         context = {
             'logs': logs
         }
@@ -425,6 +443,12 @@ class AdminBlacklistView(APIView):
             defaults={'reason': reason}
         )
 
+        return redirect('admin-blacklist')
+
+    def delete(self, request, ip_id):
+        ip_entry = get_object_or_404(BlacklistedIP, id=ip_id)
+        ip_entry.delete()
+        messages.success(request,f'IP {ip_entry.ip_address} has been whitelisted')
         return redirect('admin-blacklist')
 
 
