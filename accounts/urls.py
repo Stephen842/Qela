@@ -1,6 +1,5 @@
 from django.urls import path, include
 from accounts.views import RegisterView, LoginView, LogoutView, VerifyEmailView, ResendEmailVerificationView, PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView, UserAccountView, UserProfileView, GoogleLoginView, DeactivateAccountView, AdminDashboardView, AdminUserListView, AdminProfileListView, AdminSessionListView, AdminIPActivityView, AdminBlacklistView
-from . import views
 
 urlpatterns = [
     # -------------------------
@@ -49,10 +48,4 @@ urlpatterns = [
     path('sessions/', AdminSessionListView.as_view(), name='admin-sessions'),
     path('ip-activity/', AdminIPActivityView.as_view(), name='admin-ip-activity'),
     path('blacklist/', AdminBlacklistView.as_view(), name='admin-blacklist'),
-
-
-    # -------------------------
-    # Testing of template files
-    # -------------------------
-    path('testing/', views.testing, name='testing'),
 ]

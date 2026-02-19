@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils.timezone import now, timedelta
 from django.utils import timezone
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Exists, OuterRef
 from django.db.models.functions import TruncDate
 from django_countries import countries
 
@@ -412,11 +412,25 @@ class AdminIPActivityView(APIView):
     permission_classes = [IsAuthenticated, IsPlatformAdmin]
 
     def get(self, request):
-        logs = IPActivity.objects.select_related('user').all().order_by('-last_seen')
+        # A subquery that checks if the IP exists in the BlacklistedIP table
+        blacklisted_subquery = BlacklistedIP.objects.filter(
+            ip_address=OuterRef('ip_address'),
+            is_active=True
+        )
+
+        logs = IPActivity.objects.select_related('user').annotate(
+            is_currently_blacklisted=Exists(blacklisted_subquery)
+        ).order_by('-last_seen')
         
-        # Quick filter for security threats
-        if request.GET.get('filter') == 'suspicious':
+        # Filter Logic
+        filter_type = request.GET.get('filter')
+        if filter_type == 'suspicious':
             logs = logs.filter(is_suspicious=True)
+
+        # Search Logic
+        search = request.GET.get('search')
+        if search:
+            logs = logs.filter(ip_address__icontains=search)
 
         context = {
             'logs': logs
@@ -432,28 +446,20 @@ class AdminBlacklistView(APIView):
         context = {
             'ips': ips
         }
-        return render(request, 'admin_analytics/blacklist.html', context)
+        return render(request, 'admin-analytics/blacklist.html', context)
 
     def post(self, request):
-        ip = request.POST.get('ip_address')
-        reason = request.POST.get('reason', 'Manual admin action')
+        ip_address = request.POST.get('ip_address')
+        action = request.POST.get('action')
 
+        if action == 'remove':
+            BlacklistedIP.objects.filter(ip_address=ip_address).delete()
+            return redirect('admin-blacklist')
+        
+        reason = request.POST.get('reason', 'Manual admin action')
         BlacklistedIP.objects.get_or_create(
-            ip_address=ip,
+            ip_address=ip_address,
             defaults={'reason': reason}
         )
 
         return redirect('admin-blacklist')
-
-    def delete(self, request, ip_id):
-        ip_entry = get_object_or_404(BlacklistedIP, id=ip_id)
-        ip_entry.delete()
-        messages.success(request,f'IP {ip_entry.ip_address} has been whitelisted')
-        return redirect('admin-blacklist')
-
-
-def testing(request):
-    context = {
-        'title' : 'QELA - Testing function for templates file',
-    }
-    return render(request, 'emails/password_reset_email.html', context)
